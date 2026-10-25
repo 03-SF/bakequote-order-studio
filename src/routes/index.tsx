@@ -1,24 +1,26 @@
 import { createFileRoute } from "@tanstack/react-router";
+import hero from "@/assets/bakery-hero.jpg";
+import { Wordmark } from "@/components/bq/shell";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "BakeQuote — Welcome" },
+      { name: "description", content: "Choose the customer or baker demo of BakeQuote." },
+      { property: "og:title", content: "BakeQuote — Welcome" },
+      { property: "og:description", content: "Choose the customer or baker demo of BakeQuote." },
+    ],
+  }),
+  component: Welcome,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Welcome() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <Wordmark className="text-2xl" />
+      <img src={hero} alt="Floral cake on a kitchen counter" width={1280} height={800} className="mt-6 w-full rounded-2xl object-cover" />
+      <h1 className="mt-6 text-3xl font-semibold">Custom cakes, quoted clearly.</h1>
+      <p className="mt-2 text-muted-foreground">The full customer and baker demo screens are still being built.</p>
     </div>
   );
 }
