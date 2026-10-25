@@ -14,7 +14,11 @@ export const STAGES: Status[] = ["pending", "confirmed", "baking", "ready", "del
 const NEXT: Partial<Record<Status, Status>> = { confirmed: "baking", baking: "ready", ready: "delivered" };
 export const nextStage = (s: Status) => NEXT[s] ?? null;
 
-export const currentQuote = (o: Pick<Order, "quotes">) => o.quotes[o.quotes.length - 1];
+export const currentQuote = (o: Pick<Order, "quotes">) => {
+  const quote = o.quotes.at(-1);
+  if (!quote) throw new RuleError("This order has no quotation.");
+  return quote;
+};
 export const isAgreed = (o: Pick<Order, "quotes" | "agreedVersion">) =>
   o.agreedVersion !== null && o.agreedVersion === currentQuote(o).version;
 export const balance = (o: Pick<Order, "quotes" | "advance">) => currentQuote(o).total - o.advance;

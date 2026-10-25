@@ -65,7 +65,7 @@ export function AppShell({ role, title, back, actions, children, wide }: { role:
   const hydrated = useHydrated();
   if (!hydrated) return <Splash />;
   return (
-    <Inner role={role} title={title} back={back} actions={actions} wide={wide}>
+    <Inner role={role} title={title} {...(back !== undefined ? { back } : {})} actions={actions} {...(wide !== undefined ? { wide } : {})}>
       {children}
     </Inner>
   );
@@ -195,7 +195,7 @@ export function DemoControls({ open, onClose }: { open: boolean; onClose: () => 
     onClose();
     if (!s.sessions[r]) return nav({ to: "/auth", search: { role: r, mode: "signin" } });
     act((d) => void (d.role = r));
-    nav({ to: homeFor(r) });
+    return nav({ to: homeFor(r) });
   };
   const download = () => {
     const blob = new Blob([exportState()], { type: "application/json" });

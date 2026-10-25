@@ -68,7 +68,7 @@ const statusTone: Record<Status, keyof typeof tone> = {
 };
 export function StatusBadge({ s }: { s: Status }) {
   const t = useT();
-  return <Badge t={statusTone[s]}>{t(s[0].toUpperCase() + s.slice(1))}</Badge>;
+  return <Badge t={statusTone[s]}>{t(s.charAt(0).toUpperCase() + s.slice(1))}</Badge>;
 }
 
 export const Money = ({ v, className }: { v: number; className?: string }) => (

@@ -1,10 +1,35 @@
 # BakeQuote Order Studio
 
+## Current status
+
+The build-repair baseline provides welcome/demo entry, customer and baker navigation,
+readable seeded orders and quotations, conversations, a read-only agenda and demo controls.
+It is not the completed application. Real authentication, backend persistence, order
+creation, editing and the remaining business workflows still need implementation.
+The product goal is the full app; the screen list below is coverage guidance, not a cap.
+
+## Local checks
+
+Use Node.js 22.12+ (or a supported newer version). After installing dependencies:
+
+```sh
+npm run build
+npm run typecheck
+npm test
+npm run dev
+```
+
+The build regenerates TanStack route types. Do not edit `src/routeTree.gen.ts` by hand.
+Open the URL printed by Vite. Select a demo role; no password is needed.
+
+The following section records the original prototype brief, not completed features.
+
+
 Build BakeQuote, a polished fully interactive mobile-first responsive web prototype for customers and home bakers. Build now, not a plan or marketing landing page. React/TypeScript, Tailwind, reusable components. Use seeded demo data and shared localStorage persistence with separate customer/baker demo sessions and a discreet role switcher and reset-data action. No production backend, real authentication, payments or push integrations required. Do not publish externally.
 
 Visual: warm ivory #FFF9F5, white surfaces, muted rose #B65F75, blush #F5E4E8, cocoa text #35292D, secondary #75666B, borders #EADDE0. Refined bakery identity, consistent BakeQuote wordmark, attractive cake photography, restrained rounded cards/shadows, clear typography. Information-rich functional layouts, not repeated generic cards. Mobile bottom nav at 390–430px, responsive desktop sidebar/two columns, accessible labels/contrast/focus/touch sizes. Customer nav Home/Orders/Messages/Account. Baker Today/Calendar/Orders/Messages/Account.
 
-Exactly 18 main screen types, supporting states as tabs/steps/dialogs/sheets:
+Planned feature coverage (not a fixed screen limit), with supporting states as tabs/steps/dialogs/sheets:
 1 Welcome and role selection with customer/baker demo entry.
 2 Auth internal sign-in/register/reset/verification states, explicitly simulated, no real passwords.
 3 Customer Home: known baker code SWEETCRUMB, saved/recent bakers, active order summary (no unrestricted marketplace).

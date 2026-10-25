@@ -10,33 +10,154 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as BakerAccountRouteImport } from './routes/baker/account'
+import { Route as BakerCalendarRouteImport } from './routes/baker/calendar'
+import { Route as BakerOrdersRouteImport } from './routes/baker/orders'
+import { Route as BakerTodayRouteImport } from './routes/baker/today'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BakerAccountRoute = BakerAccountRouteImport.update({
+  id: '/baker/account',
+  path: '/baker/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BakerCalendarRoute = BakerCalendarRouteImport.update({
+  id: '/baker/calendar',
+  path: '/baker/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BakerOrdersRoute = BakerOrdersRouteImport.update({
+  id: '/baker/orders',
+  path: '/baker/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BakerTodayRoute = BakerTodayRouteImport.update({
+  id: '/baker/today',
+  path: '/baker/today',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/home': typeof HomeRoute
+  '/messages': typeof MessagesRoute
+  '/orders': typeof OrdersRoute
+  '/baker/account': typeof BakerAccountRoute
+  '/baker/calendar': typeof BakerCalendarRoute
+  '/baker/orders': typeof BakerOrdersRoute
+  '/baker/today': typeof BakerTodayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/home': typeof HomeRoute
+  '/messages': typeof MessagesRoute
+  '/orders': typeof OrdersRoute
+  '/baker/account': typeof BakerAccountRoute
+  '/baker/calendar': typeof BakerCalendarRoute
+  '/baker/orders': typeof BakerOrdersRoute
+  '/baker/today': typeof BakerTodayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
+  '/auth': typeof AuthRoute
+  '/home': typeof HomeRoute
+  '/messages': typeof MessagesRoute
+  '/orders': typeof OrdersRoute
+  '/baker/account': typeof BakerAccountRoute
+  '/baker/calendar': typeof BakerCalendarRoute
+  '/baker/orders': typeof BakerOrdersRoute
+  '/baker/today': typeof BakerTodayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/home'
+    | '/messages'
+    | '/orders'
+    | '/baker/account'
+    | '/baker/calendar'
+    | '/baker/orders'
+    | '/baker/today'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/home'
+    | '/messages'
+    | '/orders'
+    | '/baker/account'
+    | '/baker/calendar'
+    | '/baker/orders'
+    | '/baker/today'
+  id:
+    | '__root__'
+    | '/'
+    | '/account'
+    | '/auth'
+    | '/home'
+    | '/messages'
+    | '/orders'
+    | '/baker/account'
+    | '/baker/calendar'
+    | '/baker/orders'
+    | '/baker/today'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
+  AuthRoute: typeof AuthRoute
+  HomeRoute: typeof HomeRoute
+  MessagesRoute: typeof MessagesRoute
+  OrdersRoute: typeof OrdersRoute
+  BakerAccountRoute: typeof BakerAccountRoute
+  BakerCalendarRoute: typeof BakerCalendarRoute
+  BakerOrdersRoute: typeof BakerOrdersRoute
+  BakerTodayRoute: typeof BakerTodayRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +169,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/baker/account': {
+      id: '/baker/account'
+      path: '/baker/account'
+      fullPath: '/baker/account'
+      preLoaderRoute: typeof BakerAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/baker/calendar': {
+      id: '/baker/calendar'
+      path: '/baker/calendar'
+      fullPath: '/baker/calendar'
+      preLoaderRoute: typeof BakerCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/baker/orders': {
+      id: '/baker/orders'
+      path: '/baker/orders'
+      fullPath: '/baker/orders'
+      preLoaderRoute: typeof BakerOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/baker/today': {
+      id: '/baker/today'
+      path: '/baker/today'
+      fullPath: '/baker/today'
+      preLoaderRoute: typeof BakerTodayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
+  AuthRoute: AuthRoute,
+  HomeRoute: HomeRoute,
+  MessagesRoute: MessagesRoute,
+  OrdersRoute: OrdersRoute,
+  BakerAccountRoute: BakerAccountRoute,
+  BakerCalendarRoute: BakerCalendarRoute,
+  BakerOrdersRoute: BakerOrdersRoute,
+  BakerTodayRoute: BakerTodayRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
