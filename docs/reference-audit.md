@@ -1,4 +1,4 @@
-﻿# Reference audit
+# Reference audit
 
 ## Source and method
 
@@ -57,3 +57,7 @@ Copied `src/assets/bakery-hero.jpg`, `cake-chocolate.jpg`, `cupcakes.jpg` into `
 The reference's canonical 2 lb cake fixture is 3000 + 500 + 300 + 300 delivery = 4100 PKR; custom design +400 = 4500, recorded advance 1500 leaves 3000. Actual starting menu prices are 1800 for chocolate cake and 1500 for cupcakes. The reference does not seed BQ-1042: it is the next sequence number. Flutter uses BQ-1042 as an explicitly labeled illustrative quotation.
 
 Dart ports the applicable estimate, versioned agreement, revision invalidation, sequential production, availability/online preconditions, pending capacity semantics, distinct cancellation request and review ownership checks. Tests add real time bounds, integer paisa and immutable quote lists. The reference's demo allowance, browser persistence, seed date mutation and projection-only security are deliberately not adopted as production architecture. Dart domain tests do not prove server concurrency or permissions. Catalog lookup/conflict validation, full date rules, private projections and persistent operation idempotency remain later work and are tracked explicitly.
+
+## Phase 2 boundary
+
+The reference findings above remain historical and unchanged. Native authentication and Supabase migrations are new Flutter/backend work; none are inferred from the Lovable demo. The reference checkout is still separate and was not modified for Phase 2. Preserve its published Lovable history.

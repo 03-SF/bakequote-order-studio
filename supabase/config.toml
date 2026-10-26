@@ -1,0 +1,35 @@
+project_id = "bakequote-mobile"
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+[db.seed]
+enabled = false
+[studio]
+enabled = true
+port = 54323
+[local_smtp]
+enabled = true
+port = 54324
+[storage]
+enabled = true
+file_size_limit = "5MiB"
+[auth]
+enabled = true
+site_url = "http://localhost:7357"
+additional_redirect_urls = ["dev.bakequote.mobile://auth/verify", "dev.bakequote.mobile://auth/reset", "http://localhost:7357/auth/verify", "http://localhost:7357/auth/reset"]
+jwt_expiry = 3600
+enable_signup = true
+minimum_password_length = 8
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true
+secure_password_change = true
+max_frequency = "1m"

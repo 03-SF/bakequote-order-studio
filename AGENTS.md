@@ -22,4 +22,12 @@ No service-role keys or privileged secrets in clients, fixtures or commits. Add 
 
 Run `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze`, `flutter test` and an Android debug build for relevant changes. Record actual results and blockers in `docs/project-status.md`; distinguish iOS checks. Do not claim device acceptance from widget tests. Test version agreement and capacity races at the database boundary when implemented. Keep both languages and narrow RTL layouts usable.
 
-Current authorized scope: Phase 1 only. Do not start Phase 2 until requested. Maintain all handoff documents. Commit local checkpoints when requested; never rewrite published reference history.
+Current authorized scope: Phase 2 only. Stop before Phase 3. Live backend acceptance is blocked until a migrated project and secure local configuration are supplied. Maintain all handoff documents. Commit local checkpoints when requested; never rewrite published reference history.
+
+## Phase 2 access boundaries
+
+Explicit APP_MODE selects preview or live at startup. Preview never initializes Supabase and cannot access live routes. Keep authenticated data out of fixture repositories. Auth callbacks are handled once through AppLinks and PKCE exchange; recovery is checked against the SDK exchange result, not a URL type flag. Preserve same-installation recovery state across restarts. Guard initialization, errors and account switches; clear private state and image cache on identity changes.
+
+Apply only versioned Supabase migrations. Keep profile/identity/ownership fields under column grants plus RLS. Privileged functions must validate auth.uid(), use a fixed empty search_path and revoke default PUBLIC EXECUTE. Initial experience is not an admin entitlement; dual-role behavior remains an owner decision. Private order/conversation uploads stay denied until real membership tables exist. Never make them permissive just for UI tests.
+
+Report fake/HTTP-mocked Flutter tests separately from pgTAP and real Auth/PostgREST/Storage verification. SQL parsing is syntax validation only. Do not call live integration complete while real email, permissions and native restart/callback tests are blocked. Do not publish or imply remote backup; no GitHub remote is configured.

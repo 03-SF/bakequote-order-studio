@@ -1,0 +1,4 @@
+# Local CLI artifacts and credentials
+.temp/
+.branches/
+.env

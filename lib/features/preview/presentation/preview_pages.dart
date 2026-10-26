@@ -90,10 +90,16 @@ class PreviewShell extends StatelessWidget {
     required this.role,
     required this.path,
     required this.child,
+    this.routePrefix = '',
+    this.onExit,
+    this.exitLabel,
     super.key,
   });
   final String role, path;
   final Widget child;
+  final String routePrefix;
+  final VoidCallback? onExit;
+  final String? exitLabel;
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
@@ -101,7 +107,7 @@ class PreviewShell extends StatelessWidget {
         ? ['home', 'orders', 'messages', 'account']
         : ['today', 'calendar', 'orders', 'messages', 'account'];
     final index = views.indexWhere((view) => path == '/$role/$view');
-    void navigate(int i) => context.go('/$role/${views[i]}');
+    void navigate(int i) => context.go('$routePrefix/$role/${views[i]}');
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 760;
@@ -110,9 +116,9 @@ class PreviewShell extends StatelessWidget {
             title: const Wordmark(),
             actions: [
               IconButton(
-                tooltip: s.t('Switch preview role'),
-                onPressed: () => context.go('/'),
-                icon: const Icon(Icons.swap_horiz),
+                tooltip: s.t(exitLabel ?? 'Switch preview role'),
+                onPressed: onExit ?? () => context.go('/'),
+                icon: Icon(onExit == null ? Icons.swap_horiz : Icons.logout),
               ),
               const LanguageButton(),
             ],
@@ -310,7 +316,7 @@ class PreviewPage extends ConsumerWidget {
                 Text(
                   s.t(
                     ref.watch(backendConfigProvider).isConfigured
-                        ? 'Configuration supplied • integration deferred to Phase 2'
+                        ? 'Preview mode never connects to live accounts'
                         : 'Backend not connected',
                   ),
                 ),

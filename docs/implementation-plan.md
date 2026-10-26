@@ -1,4 +1,4 @@
-﻿# Implementation plan
+# Implementation plan
 
 ## Architectural boundaries
 
@@ -27,8 +27,14 @@ Storage: owner-scoped business/product image paths with explicit publication; pr
 | 9 Cross-cutting | Offline cache/drafts/reconnect, complete localization/accessibility, deletion, approved plan/export/restore | No offline authoritative writes; deletion/retention and restore access verified against owner decisions |
 | 10 Release | Acceptance suite, device matrix, performance/security, signing/beta builds and operations docs | Android and iOS physical devices, backup drills, migrations/monitoring/runbooks and store approval |
 
-Stop after Phase 1. Each later phase updates traceability and status, and introduces migrations only with tests for authoritative invariants. Never infer completed features from a screen or helper.
+Phase 1 is archived at 7a0e150. Current scope is Phase 2; stop before Phase 3. Each later phase updates traceability and status, and introduces migrations only with tests for authoritative invariants. Never infer completed features from a screen or helper.
 
 ## Quality strategy
 
 Pure tests cover price precision, quote history and state rules. Widget tests cover both navigation systems, narrow Urdu RTL, text scaling and quotation sheet. Later repository tests cover loading/error/offline states; database tests cover RLS/storage ownership, transactions, races and retries; integration/device tests cover end-to-end customer/baker journeys, app links, keyboards, uploads, screen readers and restoration. Neither in-memory tests nor an APK build substitute for device acceptance.
+
+## Phase 2 implementation and remaining gate
+
+Identity/profile/business ownership migrations and bucket policies now have versioned source. Flutter auth, profile editing and profile/business image APIs use a dedicated repository/controller rather than the fixture store. Initial experience is one-time onboarding navigation; actual business ownership is checked by RLS. Email callbacks use exact development URIs and PKCE exchange typing. Logout/session changes discard profile state and private image providers; pending reads/writes cannot repopulate an expired identity.
+
+The implementation is locally tested but the Phase 2 live gate is not met: no logged-in/linked hosted development project, local container engine or supplied public configuration. Apply migrations, run the pgTAP and HTTP checks, and verify real email/native session journeys per [Phase 2 handoff](phase-2-handoff.md) before certifying live access control. Do not advance to catalog setup to work around that gate. No order/catalog/communication tables or full business activation were added.

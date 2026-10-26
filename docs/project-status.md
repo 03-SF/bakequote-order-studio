@@ -1,43 +1,48 @@
-﻿# Project status — Phase 1
+# Current project status — Phase 2
 
-Date: 2026-10-26. Scope: Phase 1 only. Phase 2 has not started.
+Date: 2026-10-26. Phase 1 baseline is archived at 7a0e150 and in [phase-1-handoff.md](phase-1-handoff.md). Current scope stops before Phase 3.
 
-## Completed
+**Phase 2 source is implemented and locally tested. Live Supabase integration and permission acceptance remain blocked and are not claimed complete.**
 
-- Retrieved and audited the Lovable reference at `28a346ce0a4b011658f848a1d8564a8d29208783`; preserved its source and separate Git history.
-- Ran the reference in Vite; inspected welcome/customer order details/baker workspace. Existing reference test suite passed 25 tests in two files.
-- Created separate Flutter Android/iOS hosts and optional Flutter web preview, with BakeQuote development identity.
-- Added Riverpod repository/config/locale providers and go_router customer/baker route shells, adaptive tabs/rail, safe areas and scrolling.
-- Recreated cream/rose/cocoa theme, cards, buttons, wordmark, menu imagery and illustrative quotation sheet.
-- Bundled the three reference photographs and Manrope/Fraunces/Noto Nastaliq Urdu fonts with OFL licenses.
-- Localized foundation UI into English/Urdu with automatic RTL; sample proper names/references remain data. Language choice is in memory, not persisted.
-- Added public Supabase configuration boundary/example; no credentials required and no client initialized. No backend claims, writes or real auth.
-- Added pure advisory Dart estimate and order-rule foundation with immutable quote history; tests cover versioning, production sequence, offline/availability checks, duplicate operations on updated values, pending capacity semantics, cancellation distinction and delivered-order review eligibility.
-- Added requested agent instructions, phase plan, requirements traceability, audit and open decisions. Local checkpoint is on main; use `git log -1 --oneline` for its exact identifier.
+## Implemented
 
-## Actual verification
+- Supabase configuration/client lifecycle, explicit preview/live isolation and public-key validation. No secrets or local credential files are committed.
+- Real SDK calls for registration, verification/resend, login, forgot/reset/password update, logout, restoration and invalid sessions; loading/error gates and duplicate-action protection.
+- Exact Android/iOS development callbacks using AppLinks/PKCE; SDK-typed recovery enforcement and a per-project/user recovery marker across restarts. Password update requires fresh sign-in.
+- Persistent own profile name/phone/locale and image APIs; verified first-identity onboarding; baker ownership plus a private draft business. Full bakery setup remains Phase 3.
+- Two versioned migrations for schema/grants/RLS/functions and storage. Safe initialization ignores privilege metadata; no client admin/operator role. Future product/order/conversation uploads remain denied.
+- Authenticated role-aware navigation preserves theme/Riverpod/go_router/English-Urdu RTL and existing domain rules. Account changes clear profile/provider/form/image state; stale reads/writes cannot repopulate a logged-out identity.
+- Backend setup, database/storage policies, traceability, decisions and detailed [Phase 2 handoff](phase-2-handoff.md), including separate-account acceptance scenarios.
+
+## Checks actually executed
 
 | Check | Result |
 | --- | --- |
-| Flutter environment | Flutter 3.41.1 stable / Dart 3.11.0, Windows, Android SDK 36.1.0, JDK 21 |
-| `dart format --output=none --set-exit-if-changed lib test` | Passed: 12 files, 0 changed |
-| `flutter analyze --no-pub` | Passed: no issues found |
-| `flutter test --no-pub` | Passed: 8 tests (6 domain, 2 widget) |
-| Narrow RTL/text scaling | Widget tests exercise 390×844 at 160% scale, Urdu direction and customer tabs; both role navigation tested at wider width |
-| `flutter build apk --debug` | Succeeded; first build 505.4 seconds, APK generated |
-| `flutter run -d emulator-5554 --no-resident --no-pub` | Final corrected source rebuilt successfully (107.3 seconds), APK installed and Flutter startup completed on Android 16/API 36 x64 emulator |
-| Android visual smoke check | Welcome rendered with supplied imagery, wordmark and preview label. Emulator showed an unrelated Pixel Launcher not-responding dialog; this is not full device acceptance |
-| iOS | Host generated only. Not built/signed/run: requires macOS, Xcode and appropriate signing environment |
-| Reference `npm test` | Passed: 25 tests; no tracked reference source changes after restoring Vite-generated route line endings |
+| Phase 1 baseline | Clean working tree at 7a0e150; analyze clean and 8 tests passed |
+| Flutter tests | 29 passed: existing domain/navigation tests plus auth-controller, live-form/RTL and SDK HTTP-mock callback tests |
+| Formatting | Passed: 22 Dart files, 0 changes in the final format check |
+| Static analysis | Passed: no issues found in final analysis |
+| SQL/PLpgSQL parser | Both migrations and transactional pgTAP suite parsed successfully; syntax only |
+| Python HTTP test script | Compiled successfully; real backend requests not run without configuration/accounts |
+| iOS plist | Parsed successfully and callback keys checked; this is not an iOS build/runtime test |
+| Android debug build | Succeeded (221.1 seconds) with Kotlin fallback after the known C:/D: incremental-cache issue |
+| Android live-mode build/startup | Rebuilt/installed on Android 16 emulator; missing-configuration smoke test exposed provider retries keeping loading visible. Fixed with explicit initialization retry behavior, bounded wait and regression test; corrected run rebuilt successfully (58.2 seconds), installed (14.7 seconds) and produced normal Flutter startup logs. Final visual confirmation was blocked when ADB became offline/still authorizing; the configuration error is verified by the real-provider widget regression test |
+| Final-source Android APK | `flutter build apk --debug --no-pub --dart-define=APP_MODE=live` succeeded (102.6 seconds); no credentials embedded |
+| Android callback registration | ADB query resolves dev.bakequote.mobile://auth/verify to the BakeQuote activity |
+| Hosted Supabase discovery | Failed with AccessTokenRequiredError: no CLI login/access token |
+| Local Supabase discovery | Failed with StatusDbInspectError: Docker/Podman not found; no linked project |
+| pgTAP database tests | Attempted, blocked by DbConnectError / ECONNREFUSED 127.0.0.1:54322 |
+| Live Auth/email/RLS/Storage | Not executed; no available migrated project/public config or verified test-account credentials |
+| iOS build/sign/device | Not executed; Windows host lacks macOS/Xcode environment |
 
-The first test run found a narrow wordmark overflow, corrected by scaling only the brand mark to available width. A subsequent broad edit temporarily affected money rows; corrected before final passing tests/build. Initial analysis style notices were fixed with Dart tooling. The first Android build logged Kotlin incremental-cache errors involving C: pub cache versus D: project paths, then Gradle's fallback succeeded. The final rebuild succeeded. If this recurs on another machine, inspect the cache/drive configuration before changing global settings. Flutter Doctor reports some Android licenses unaccepted; build nevertheless completed with installed components. Review and accept required SDK licenses via `flutter doctor --android-licenses` when provisioning missing components.
+Local tests use repository fakes and mocked HTTP where stated. They do not verify real email delivery, native authenticated restart, RLS/storage requests or live image uploads. The SQL parser proves syntax, not grants or policies at runtime. No database migration has been applied here. Focused authentication-widget tests were also rerun: all 3 passed.
 
-## Remaining work and blockers
+## Blockers and owner decisions
 
-This foundation has sample/placeholder screens, not production workflows. No real authentication, profiles, migrations, RLS/storage permissions, catalog editing, bakery lookup, request creation, actual quote agreement/confirmation, concurrent capacity enforcement, operations editing/manual orders, communication/Realtime, notifications/moderation, durable drafts/offline storage, deletion or plans/backup restore exist. Follow the phase plan rather than treating previews as completed features.
+To complete live acceptance, make a migrated local Supabase stack available or complete local CLI login/link for an existing hosted development project. Put the actual public URL/key in ignored `config/local.json`, configure exact email redirects/sender, and use dedicated verified customer/Baker A/Baker B accounts via secure local prompts. [Backend setup](backend-setup.md) has exact commands and no service-role requirement in Flutter.
 
-No Supabase project or public configuration supplied: live Phase 2 setup requires project details, auth redirect/email configuration and verified ownership policies. No mobile GitHub repository supplied: local Git is initialized with no remote; README includes connection steps. Final app identifiers, imagery rights, legal/retention/plan policies and release credentials remain owner decisions. Default generated launcher icons remain development assets; branded store assets belong to release preparation. iOS and physical Android acceptance require suitable environments/devices.
+Dual-role enrollment, multiple-business/team behavior, final app identifiers/universal links, legal/retention/deletion, cleanup of replaced image objects, production backup responsibilities and image rights remain unresolved. Current initial-experience UI and one draft per baker are explicitly provisional, not silent final product decisions. No Phase 3 catalog/order/communication workflows were added.
 
-## Handoff
+## Source control and handoff
 
-Follow README commands to run. Start at welcome, select either preview role, navigate tabs, inspect the sample quotation, and switch language. Stop here: Phase 2 requires a new request. The local checkpoint includes source, lockfile, generated platform hosts and documentation, excluding build outputs and local configuration.
+Phase 2 is saved as a separate local commit on main; inspect `git log -1 --oneline` for its exact hash. Phase 1 history is preserved. There is still no GitHub remote and no remote backup. Run using [README commands](../README.md), and follow the [Phase 2 handoff](phase-2-handoff.md) to finish infrastructure-dependent acceptance. Stop before Phase 3.
