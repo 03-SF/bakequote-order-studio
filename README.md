@@ -54,6 +54,7 @@ On macOS with Xcode/CocoaPods, run `flutter build ios --simulator`, then `flutte
 
 - [Database and storage](docs/database-and-storage.md): migrations, grants, policies, paths and test boundaries.
 - [Implementation plan](docs/implementation-plan.md), [traceability](docs/requirements-traceability.md), [decisions](docs/decisions.md).
+- [Architecture contract](docs/architecture.md), [NFR register](docs/non-functional-requirements.md) and [Phase 1-3 audit](docs/architecture-nfr-audit.md).
 - [Reference audit](docs/reference-audit.md): the separate Lovable implementation remains a reference.
 - [Current status](docs/project-status.md) and [Phase 3 verification/handoff](docs/phase-3-handoff.md).
 
@@ -64,7 +65,7 @@ git remote add origin https://github.com/<owner>/<new-mobile-repository>.git
 git push -u origin main
 ```
 
-Stop before Phase 4. Backend credentials, final role/membership product decisions and live acceptance remain tracked rather than assumed.
+Phase 3A establishes architecture and non-functional acceptance criteria only. Do not start Phase 4 until authorized. Backend credentials, final role/membership product decisions, proposed NFR targets and live acceptance remain tracked rather than assumed.
 
 ## Phase 3 demonstration and local database checks
 

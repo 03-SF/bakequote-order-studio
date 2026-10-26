@@ -2,11 +2,35 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/backend_config.dart';
-import '../data/auth_repository.dart';
 import '../data/supabase_auth_repository.dart';
 import '../domain/auth_models.dart';
+import '../domain/auth_repository.dart';
+import '../../../core/media/image_validation.dart';
+
+final authRepositoryProvider = FutureProvider<AuthRepository?>((ref) async {
+  final config = ref.watch(backendConfigProvider);
+  if (config.isPreview) return null;
+  if (config.validationError != null) {
+    throw UserFacingFailure(config.validationError!);
+  }
+  await Supabase.initialize(
+    url: config.url,
+    publishableKey: config.publishableKey,
+    debug: false,
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+      detectSessionInUri: false,
+    ),
+  );
+  return SupabaseAuthRepository(
+    ref.read(supabaseClientProvider),
+    config,
+    await SharedPreferences.getInstance(),
+  );
+}, retry: (_, _) => null);
 
 final incomingAuthLinksProvider = Provider<Stream<Uri>>(
   (ref) => kIsWeb ? const Stream.empty() : AppLinks().uriLinkStream,
@@ -19,6 +43,7 @@ final authControllerProvider = NotifierProvider<AuthController, AuthViewState>(
 );
 String authErrorKey(Object error) {
   if (error is UserFacingFailure) return error.key;
+  if (error is ImageValidationFailure) return error.message;
   if (error is AuthException) {
     switch (error.code) {
       case 'invalid_credentials':

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bakequote_mobile/core/media/image_validation.dart';
 import 'package:bakequote_mobile/core/config/backend_config.dart';
 import 'package:bakequote_mobile/features/auth/application/auth_controller.dart';
-import 'package:bakequote_mobile/features/auth/data/auth_repository.dart';
-import 'package:bakequote_mobile/features/auth/data/supabase_auth_repository.dart';
 import 'package:bakequote_mobile/features/auth/domain/auth_models.dart';
+import 'package:bakequote_mobile/features/auth/domain/auth_repository.dart';
 
 const testLiveConfig = BackendConfig(
   mode: 'live',

@@ -40,6 +40,12 @@ Statuses: Foundation = Phase 1 code; Implemented/pending integration = Phase 2 s
 | X05 | Plans/export/backup/restore | No invented pricing/allowance; owner applicability unresolved | 9 |
 | V01 | Setup/verification/docs/local checkpoint | README, project-status.md, Git checkpoint | 1 |
 | V02 | Release/Android+iOS device verification | Android build attempt recorded; iOS requires macOS/Xcode | 10 |
+| ARC-01 | Document and enforce feature architecture boundaries | `docs/architecture.md`; Phase 3A contracts moved to domain, image validation moved to core, auth repository provider moved to application | 3A |
+| NFR-01 | Stable acceptance criteria for security, reliability, performance, accessibility, compatibility and operations | `docs/non-functional-requirements.md`; proposed targets explicitly unapproved | 3A |
+| AUD-01 | Evidence/gap/correction audit of Phases 1-3 | `docs/architecture-nfr-audit.md`; live and device evidence distinguished | 3A |
+| NFR-02 | Typed persistence errors and conflict mapping | Baker application still maps selected SQL failures by error text; follow-up required | 3A follow-up |
+| NFR-03 | Performance benchmarks and supported-device matrix | Proposed measurable tests recorded; no results claimed; configured iOS 13.0, Android uses Flutter minSdk | 10 |
+| NFR-04 | Cross-account, private storage, email and native lifecycle verification | Local/model evidence is not live evidence; see current status and handoff | 2,3,10 |
 
 Domain port scope is explicit: web date parsing, catalog conflict checking, private projection and localStorage export/reset tests are not represented as migrated functionality. Their real equivalents belong to availability, ownership and offline/restore phases. Do not infer backend enforcement from these advisory Dart tests.
 

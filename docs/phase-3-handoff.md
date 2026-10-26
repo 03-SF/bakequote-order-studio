@@ -116,3 +116,20 @@ There is no known failing local automated check at handoff. Device-specific keyb
 ## Local checkpoint
 
 A separate conventional local commit follows Phase 2; use `git log -1 --oneline` for its hash. Phase 1/2 history is retained. `git remote -v` is empty: **no remote backup or GitHub publishing has occurred**. Do not infer remote safety from a local commit.
+
+## Phase 3A architecture and NFR baseline (2026-10-26)
+
+Phase 3A preserves Phase 3 features and history. The verified starting checkpoint was clean `7c6b03c`; preceding commits `f5c5986` and `7a0e150` remain in history. Architecture responsibilities and remaining debt are in [architecture contract](architecture.md); stable NFR acceptance criteria are in [NFR register](non-functional-requirements.md); Phase 1-3 source/evidence gaps are in [audit](architecture-nfr-audit.md). Repository contracts now live in feature domains, the auth provider is composed from the application layer, and image signature/size validation is shared from core. No Phase 4 workflow was started.
+
+| Phase 3A verification | Result |
+| --- | --- |
+| `dart format --output=none --set-exit-if-changed lib test` | Passed after formatting `test/auth_test.dart`; final check is recorded in the checkpoint commit. |
+| `flutter analyze --no-pub` | Passed: no issues. |
+| `flutter test --no-pub` | Passed: all 49 tests. |
+| `npm.cmd ci --prefix scripts/sql-test` and `node scripts/sql-test/verify.mjs` | Passed: all four migrations applied in PGlite 0.5.11 and 41 local PostgreSQL/grant/RLS/function checks passed. These are modeled SQL checks, not Supabase service checks. |
+| `flutter build apk --debug --no-pub` | Passed; APK at `build/app/outputs/flutter-apk/app-debug.apk`. |
+| Android emulator | `adb devices -l` listed `emulator-5554`; installing this APK failed with streamed install and blank ADB failure detail. No UI/device acceptance is claimed. Prior Phase 3 alternate non-streamed install also timed out. |
+| Live Supabase | `config/local.json` absent; `supabase status` reports Docker unavailable (Podman also absent), with no linked project. No live Auth, database, Storage or email checks were available. |
+| iOS | Not built or device-tested. Xcode project target is iOS 13.0; Windows host has no usable Xcode/macOS environment. |
+
+Configured Android minimum resolved from the generated manifest is API 24 with Flutter 3.41.1; iOS deployment target is 13.0. This records configuration, not tested platform support. Performance/device targets in the NFR register are proposals awaiting owner review; no performance measurements, availability, RPO or RTO commitments were made. Owner decisions for dual-role enrollment remain open. No Git remote is configured; the new local checkpoint is not remote backup. Stop before Phase 4.

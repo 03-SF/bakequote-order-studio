@@ -10,7 +10,7 @@ import '../../../core/config/backend_config.dart';
 import '../../../shared/widgets/controls.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/baker_providers.dart';
-import '../data/baker_repository.dart';
+import '../domain/baker_repository.dart';
 import '../domain/baker_workspace.dart';
 
 class BakerDirty extends Notifier<bool> {

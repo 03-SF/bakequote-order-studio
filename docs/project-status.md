@@ -1,6 +1,6 @@
-# Current project status - Phase 3
+# Current project status - Phase 3A
 
-Date: 2026-10-26. Verified baseline: clean Phase 2 commit `f5c5986`, preceded by `7a0e150`. No remote is configured. Current authorized scope stops before Phase 4.
+Date: 2026-10-26. Verified baseline: clean commit `7c6b03c` (Phase 3), preceded by `f5c5986` and `7a0e150`. No remote is configured. Current authorized scope is Phase 3A architecture/NFR baseline; do not start Phase 4.
 
 **Phase 3 functionality is implemented. Local validation and live acceptance are distinct. Supabase integration is still unverified because development infrastructure/configuration is unavailable.**
 
@@ -41,3 +41,11 @@ Live registration/initialization/verification/resend/recovery/login/restart/logo
 Dual-role enrollment/navigation, teams/multiple businesses, final bundle IDs/universal links, production policies/retention/deletion, server orphan cleanup after device data loss, asset rights and remote backup remain unresolved. Existing initial experience/one owned draft are preserved provisionally; no preview control grants a real role. Personal Phase 2 profile-photo replacement retention is unchanged.
 
 Phase 4 customer discovery, saved bakeries, lead times/capacity/blocked dates and all later ordering/communication workflows are not implemented. Stop here. Local commits preserve work on this machine only; there is no remote backup.
+
+## Phase 3A architecture and NFR baseline
+
+Created `docs/architecture.md`, `docs/non-functional-requirements.md` and `docs/architecture-nfr-audit.md`. Moved auth and baker repository contracts into their feature domain folders, moved image signature/size validation into `core/media`, and moved auth repository construction out of the data implementation into the application provider. Domain/provider/UI tests were updated accordingly.
+
+Known contained architecture debt: `BakerWorkspace` remains a mutable JSON-shaped persistence model in domain, baker error mapping still detects some SQL failures through message text, app-layer auth composition imports the concrete SDK implementation, and presentation screens still invoke repository operations through providers rather than dedicated workflow controllers. The audit identifies focused follow-up corrections. No access-control defect was found by source/modeled review; live policy acceptance remains unverified. Performance and broader platform targets are proposals, not owner-approved commitments or measured results. Android merged manifest resolves minSdk 24 with Flutter 3.41.1; iOS Xcode project target is 13.0. Neither is a device support claim.
+
+Phase 3A checks are recorded in `phase-3-handoff.md`. Supabase development credentials/project remain unavailable; Android emulator installation/UI inspection remains unverified; iOS build/device testing requires macOS/Xcode and was not performed. No availability, recovery, database-backup or user-export commitment is configured. Source Git, database backups and user data export are separate concerns; no remote Git backup exists.

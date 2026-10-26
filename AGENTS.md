@@ -22,7 +22,7 @@ No service-role keys or privileged secrets in clients, fixtures or commits. Add 
 
 Run `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze`, `flutter test` and an Android debug build for relevant changes. Record actual results and blockers in `docs/project-status.md`; distinguish iOS checks. Do not claim device acceptance from widget tests. Test version agreement and capacity races at the database boundary when implemented. Keep English layouts accessible at narrow widths and large text sizes.
 
-Current authorized scope: Phase 3 only. Stop before Phase 4. Live backend acceptance is blocked until a migrated project and secure local configuration are supplied. Maintain all handoff documents. Commit local checkpoints when requested; never rewrite published reference history.
+Current authorized scope: Phase 3A architecture/NFR baseline only. Do not start Phase 4. Follow `docs/architecture.md` and acceptance methods in `docs/non-functional-requirements.md`. Live backend acceptance is blocked until a migrated development project and secure local configuration are supplied. Maintain all handoff documents and report local/model checks separately from live/device checks. Commit local checkpoints when requested; never rewrite existing history or claim local commits are remote backups.
 
 ## Phase 2 access boundaries
 

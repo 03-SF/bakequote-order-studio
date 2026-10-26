@@ -4,6 +4,8 @@
 
 The current checkout has no `config/local.json`, linked project or Supabase environment configuration. Supabase CLI 2.122.0 is available through npx. Project listing failed with `AccessTokenRequiredError`: no CLI login/access token. Local status failed with `StatusDbInspectError`: Docker and Podman were not found. No migrations or permission tests have executed against Supabase services. Phase 3 separately executes all migrations and ownership/pricing checks in a local PostgreSQL/WASM model; it does not verify Supabase Auth/PostgREST/Storage. SQL parsing remains syntax-only.
 
+Architecture and acceptance boundaries are in [architecture.md](architecture.md) and [non-functional-requirements.md](non-functional-requirements.md). The local SQL model is not a hosted backend check. Execute identity and catalog RLS/storage tests against an isolated development project before treating live behavior as verified.
+
 ## Local stack (requires Docker Desktop or Podman)
 
 Install and start a supported container engine. From `mobile`, use the pinned CLI:

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bakequote_mobile/features/baker/domain/baker_workspace.dart';
 import 'package:bakequote_mobile/features/baker/data/baker_repository.dart';
 import 'package:bakequote_mobile/features/auth/domain/auth_models.dart';
+import 'package:bakequote_mobile/core/media/image_validation.dart';
 import 'support/baker_fixture.dart';
 import 'package:bakequote_mobile/features/baker/application/baker_providers.dart';
 
@@ -11,8 +12,14 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   test('Image validation exposes useful safe instructions', () {
     expect(
-      bakerError(const UserFacingFailure('Choose a JPEG, PNG or WebP image')),
+      bakerError(
+        const ImageValidationFailure('Choose a JPEG, PNG or WebP image'),
+      ),
       'Choose a JPEG, PNG or WebP image',
+    );
+    expect(
+      bakerError(const ImageValidationFailure('Choose an image up to 5 MB')),
+      'Choose an image up to 5 MB',
     );
   });
   test('Estimate rejects totals that cannot be represented exactly on web', () {
@@ -182,7 +189,7 @@ void main() {
       var w = await repo.save(fixture());
       await expectLater(
         repo.image(w, 'product', productId, Uint8List.fromList([1, 2]), (_) {}),
-        throwsA(isA<UserFacingFailure>()),
+        throwsA(isA<ImageValidationFailure>()),
       );
       expect((await repo.load()).products[0]['image_path'], null);
       w = await repo.image(

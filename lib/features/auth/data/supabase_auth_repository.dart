@@ -1,36 +1,11 @@
 import 'dart:typed_data';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/config/backend_config.dart';
+import '../../../core/media/image_validation.dart';
 import '../domain/auth_models.dart';
-import 'auth_repository.dart';
-
-final authRepositoryProvider = FutureProvider<AuthRepository?>((ref) async {
-  final config = ref.watch(backendConfigProvider);
-  if (config.isPreview) return null;
-  if (config.validationError != null) {
-    throw UserFacingFailure(config.validationError!);
-  }
-  // One SDK-owned persistence/refresh lifecycle; our controller owns callbacks.
-  {
-    await Supabase.initialize(
-      url: config.url,
-      publishableKey: config.publishableKey,
-      debug: false,
-      authOptions: const FlutterAuthClientOptions(
-        authFlowType: AuthFlowType.pkce,
-        detectSessionInUri: false,
-      ),
-    );
-  }
-  return SupabaseAuthRepository(
-    ref.read(supabaseClientProvider),
-    config,
-    await SharedPreferences.getInstance(),
-  );
-}, retry: (retryCount, error) => null);
+import '../domain/auth_repository.dart';
 
 class SupabaseAuthRepository implements AuthRepository {
   SupabaseAuthRepository(this.client, this.config, this.preferences);

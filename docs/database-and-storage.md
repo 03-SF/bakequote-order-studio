@@ -98,4 +98,6 @@ Migration 004 also fixes unqualified storage object-name references: names are e
 - Real HTTP: verify_backend.py and verify_phase3.py use dedicated accounts/public key, never a service key; unexecuted without development configuration.
 - Flutter: pure rules, preview device persistence, HTTP-mocked SDK image failures and widget flows. No claim of live persistence derives from these checks.
 
+Future database functions for quotes, agreements, capacity, allowances and lifecycle changes must use explicit execute grants, authenticated ownership checks, a fixed search path and transactional atomic writes. Retryable mutations require unique scoped idempotency keys; stale revisions must conflict instead of silently overwriting. See [architecture contract](architecture.md) and [NFR acceptance criteria](non-functional-requirements.md). None of these future order workflows is implemented by the Phase 3 catalog RPCs.
+
 Primary policy/function guidance: [Supabase functions](https://supabase.com/docs/guides/database/functions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Storage access control](https://supabase.com/docs/guides/storage/security/access-control).

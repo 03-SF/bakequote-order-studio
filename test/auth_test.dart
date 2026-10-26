@@ -3,11 +3,19 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bakequote_mobile/core/config/backend_config.dart';
 import 'package:bakequote_mobile/features/auth/application/auth_controller.dart';
-import 'package:bakequote_mobile/features/auth/data/auth_repository.dart';
+import 'package:bakequote_mobile/core/media/image_validation.dart';
 import 'package:bakequote_mobile/features/auth/domain/auth_models.dart';
 import 'support/fake_auth_repository.dart';
 
 void main() {
+  test('Shared image failures map to safe authentication copy', () {
+    expect(
+      authErrorKey(
+        const ImageValidationFailure('Choose a JPEG, PNG or WebP image'),
+      ),
+      'Choose a JPEG, PNG or WebP image',
+    );
+  });
   test(
     'Session expiry during a profile write cannot resurrect private data',
     () async {
@@ -283,11 +291,11 @@ void main() {
     );
     expect(
       () => validateImage(Uint8List.fromList([1, 2, 3])),
-      throwsA(isA<UserFacingFailure>()),
+      throwsA(isA<ImageValidationFailure>()),
     );
     expect(
       () => validateImage(Uint8List(5 * 1024 * 1024 + 1)),
-      throwsA(isA<UserFacingFailure>()),
+      throwsA(isA<ImageValidationFailure>()),
     );
     expect(
       validateImage(Uint8List.fromList([255, 216, 255, 0])).mime,

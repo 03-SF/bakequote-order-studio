@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../shared/widgets/controls.dart';
 import '../application/auth_controller.dart';
-import '../data/supabase_auth_repository.dart';
 import '../domain/auth_models.dart';
 import 'auth_pages.dart';
 

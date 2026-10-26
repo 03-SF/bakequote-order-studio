@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/config/backend_config.dart';
+import '../../../core/media/image_validation.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../auth/domain/auth_models.dart';
 import '../data/baker_repository.dart';
+import '../domain/baker_repository.dart';
 import '../domain/baker_workspace.dart';
 
 final bakerRepositoryProvider = FutureProvider.autoDispose<BakerRepository>((
@@ -37,7 +39,7 @@ final bakerWorkspaceProvider = FutureProvider.autoDispose<BakerWorkspace>((
   return workspace;
 }, retry: (_, _) => null);
 String bakerError(Object error) {
-  if (error is UserFacingFailure) return error.key;
+  if (error is ImageValidationFailure) return error.message;
   if (error is FormatException) return error.message;
   // Avoid exposing database details; conflict and authorization have useful safe copy.
   final text = error.toString();

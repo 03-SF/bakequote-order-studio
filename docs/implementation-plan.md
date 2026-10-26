@@ -33,6 +33,12 @@ Phase 1 is archived at 7a0e150. Current scope is Phase 3; stop before Phase 4. E
 
 Pure tests cover price precision, quote history and state rules. Widget tests cover both navigation systems, narrow English layouts, text scaling and quotation sheet. Later repository tests cover loading/error/offline states; database tests cover RLS/storage ownership, transactions, races and retries; integration/device tests cover end-to-end customer/baker journeys, app links, keyboards, uploads, screen readers and restoration. Neither in-memory tests nor an APK build substitute for device acceptance.
 
+## Phase 3A architecture and non-functional baseline
+
+Phase 3A establishes [the architecture contract](architecture.md), [NFR acceptance register](non-functional-requirements.md) and [Phase 1-3 audit](architecture-nfr-audit.md). Its source corrections move repository contracts to feature domains, shared byte-only image validation to core, and auth provider composition to the application layer. It does not add Phase 4 workflows. Proposed performance/platform targets remain unapproved proposals. Live Supabase, Android device and iOS verification gates remain open.
+
+Before Phase 4, resolve owner decisions required by a concrete workflow; preserve server authorization and atomicity requirements. Phase 4 discovery/availability must use bounded/paginated queries and approved public projections. Phase 5 requests need immutable price/configuration snapshots, server pricing and idempotent atomic submission. Phase 6 agreement/confirmation needs version checks, operation keys, explicit transaction boundaries and capacity-race tests. Phase 8 private attachments require actual conversation/order membership authorization. Phase 9/10 require owner-approved deletion/export, backup, device support and release operations decisions.
+
 ## Phase 2 implementation and remaining gate
 
 Identity/profile/business ownership migrations and bucket policies now have versioned source. Flutter auth, profile editing and profile/business image APIs use a dedicated repository/controller rather than the fixture store. Initial experience is one-time onboarding navigation; actual business ownership is checked by RLS. Email callbacks use exact development URIs and PKCE exchange typing. Logout/session changes discard profile state and private image providers; pending reads/writes cannot repopulate an expired identity.
