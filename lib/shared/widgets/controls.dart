@@ -59,9 +59,7 @@ class PreviewNotice extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              s.t(
-                'Phase 1 • Sample data only. Accounts and ordering are not connected.',
-              ),
+              s.t('Preview • Sample data only. No live account or ordering.'),
             ),
           ],
         ),

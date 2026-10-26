@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/config/backend_config.dart';
@@ -10,6 +9,7 @@ import '../features/auth/application/auth_controller.dart';
 import '../features/auth/domain/auth_models.dart';
 import '../features/auth/presentation/auth_pages.dart';
 import '../features/auth/presentation/live_pages.dart';
+import '../features/baker/presentation/baker_pages.dart';
 
 class AuthRouterRefresh extends ChangeNotifier {
   void refresh() => notifyListeners();
@@ -51,6 +51,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth/onboarding',
         builder: (context, state) => const IdentityPage(),
+      ),
+      GoRoute(
+        path: '${preview ? '' : '/live'}/baker/setup',
+        builder: (context, state) => const BakerPage(),
+        onExit: (context, state) =>
+            !preview &&
+                ref.read(authControllerProvider).phase != AuthPhase.signedIn
+            ? true
+            : confirmBakerExit(
+                context,
+                dirty: ref.read(bakerDirtyProvider),
+                discarded: () =>
+                    ref.read(bakerDirtyProvider.notifier).set(false),
+              ),
       ),
       for (final role in ['customer', 'baker'])
         ShellRoute(
@@ -102,14 +116,12 @@ class BakeQuoteApp extends ConsumerWidget {
   const BakeQuoteApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(localeProvider);
     return MaterialApp.router(
       title: 'BakeQuote',
       debugShowCheckedModeBanner: false,
-      locale: locale,
-      supportedLocales: const [Locale('en'), Locale('ur')],
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      theme: bakeTheme(urdu: locale.languageCode == 'ur'),
+      locale: const Locale('en'),
+      supportedLocales: const [Locale('en')],
+      theme: bakeTheme(),
       routerConfig: ref.watch(routerProvider),
     );
   }

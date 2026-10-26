@@ -2,7 +2,7 @@
 
 ## Observed environment
 
-The current checkout has no `config/local.json`, linked project or Supabase environment configuration. Supabase CLI 2.122.0 is available through npx. Project listing failed with `AccessTokenRequiredError`: no CLI login/access token. Local status failed with `StatusDbInspectError`: Docker and Podman were not found. No migrations or permission tests have executed against an actual database in this session. SQL parsing is not database verification.
+The current checkout has no `config/local.json`, linked project or Supabase environment configuration. Supabase CLI 2.122.0 is available through npx. Project listing failed with `AccessTokenRequiredError`: no CLI login/access token. Local status failed with `StatusDbInspectError`: Docker and Podman were not found. No migrations or permission tests have executed against Supabase services. Phase 3 separately executes all migrations and ownership/pricing checks in a local PostgreSQL/WASM model; it does not verify Supabase Auth/PostgREST/Storage. SQL parsing remains syntax-only.
 
 ## Local stack (requires Docker Desktop or Podman)
 
@@ -102,3 +102,41 @@ Provide a running migrated local stack, or an existing development project with 
 ## Primary references
 
 The locked SDK implementation was inspected for PKCE exchange/session behavior. Reference guidance: [Supabase Flutter SDK](https://github.com/supabase/supabase-flutter/tree/main/packages/supabase_flutter), [Storage access control](https://supabase.com/docs/guides/storage/security/access-control), [bucket configuration](https://supabase.com/docs/guides/storage/buckets/fundamentals). These describe APIs and policy behavior; they do not certify this project's unexecuted live integration.
+
+## Phase 3 development verification
+
+Environment discovery was repeated: no ignored `config/local.json`, no Supabase CLI login/token or linked project, and no Docker/Podman. Missing infrastructure is separate from implementation defects. Migrations 003/004 must be applied after 001/002; do not skip 004, which fixes storage object-name qualification and enables owner-scoped product/cover images.
+
+Local independent SQL runtime checks require Node.js and use the committed lockfile:
+
+```powershell
+npm.cmd ci --prefix scripts/sql-test
+node scripts/sql-test/verify.mjs
+```
+
+For the actual local Supabase services, after installing/starting the container engine:
+
+```powershell
+npx.cmd --yes supabase@2.122.0 start
+npx.cmd --yes supabase@2.122.0 db reset --local
+npx.cmd --yes supabase@2.122.0 test db
+```
+
+Reset only a disposable local stack. For an existing development project, use the login/link/dry-run/push commands above. Supply its public URL/key in the ignored local configuration and configure exact verification/reset callbacks. Keep email confirmation enabled.
+
+Create three verified fixture accounts: Customer, Baker A, Baker B. Complete their corresponding initial identity in the app. Use the secure prompts above, then run both HTTP suites:
+
+```powershell
+python scripts/verify_backend.py --config config/local.json
+python scripts/verify_phase3.py --config config/local.json --confirm-development
+```
+
+The Phase 3 suite mutates Baker A's disposable business details, activates it, adds a cake/customizations/delivery fixture, tests PKR 4,100, uploads/detaches/removes a public product image and deactivates the fixture. Existing catalog/zones omitted by its save are deactivated. Do not use real operational businesses or production. The explicit flag confirms this development-only test intent. It verifies two-owner writes/public projections through HTTP; email/device restart and signed private-file checks remain covered separately by the Phase 2 suite and manual acceptance.
+
+To unblock live checks, the owner must supply **locally**, not in chat:
+
+1. Running Docker/Podman Supabase stack, or CLI login/link access to an identified hosted development project. Database password/access token remain in CLI secure prompts/credential storage.
+2. Actual public API URL and public publishable/anon key in ignored `config/local.json` (no service-role key).
+3. Configured email sender/confirmation/reset redirects and three dedicated verified account credentials through the secure process-environment prompts.
+
+Then execute migrations, pgTAP/HTTP suites and the native sign-up/email/restart/account-switch/upload demonstration. These live checks remain blocked until those steps run. iOS separately requires macOS/Xcode and an appropriate simulator/device.

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bakequote_mobile/app/app.dart';
-import 'package:bakequote_mobile/core/l10n/app_strings.dart';
 import 'package:bakequote_mobile/features/auth/application/auth_controller.dart';
 import 'support/fake_auth_repository.dart';
 
@@ -70,7 +69,7 @@ void main() {
     },
   );
   testWidgets(
-    'Live Urdu registration validates at narrow width and 160% scale',
+    'Live English registration validates at narrow width and 160% scale',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -82,7 +81,6 @@ void main() {
       final container = authContainer(repo);
       addTearDown(container.dispose);
       addTearDown(repo.events.close);
-      container.read(localeProvider.notifier).toggle();
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
@@ -94,9 +92,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         Directionality.of(tester.element(find.byType(Form))),
-        TextDirection.rtl,
+        TextDirection.ltr,
       );
-      await tester.enterText(find.byType(TextFormField).at(0), 'عائشہ');
+      await tester.enterText(find.byType(TextFormField).at(0), 'Ayesha');
       await tester.enterText(
         find.byType(TextFormField).at(1),
         'new@example.test',
@@ -104,11 +102,11 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(2), 'password');
       await tester.enterText(find.byType(TextFormField).at(3), 'different');
       await tester.ensureVisible(
-        find.widgetWithText(FilledButton, 'اکاؤنٹ بنائیں'),
+        find.widgetWithText(FilledButton, 'Create account'),
       );
-      await tester.tap(find.widgetWithText(FilledButton, 'اکاؤنٹ بنائیں'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
       await tester.pumpAndSettle();
-      expect(find.text('پاس ورڈ یکساں نہیں ہیں'), findsOneWidget);
+      expect(find.text('Passwords do not match'), findsOneWidget);
       expect(repo.registrations, 0);
       expect(tester.takeException(), isNull);
     },

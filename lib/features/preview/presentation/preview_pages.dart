@@ -7,27 +7,13 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/controls.dart';
 import '../data/preview_repository.dart';
 
-class LanguageButton extends ConsumerWidget {
-  const LanguageButton({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) => TextButton(
-    onPressed: () => ref.read(localeProvider.notifier).toggle(),
-    child: Text(
-      ref.watch(localeProvider).languageCode == 'en' ? 'اردو' : 'English',
-    ),
-  );
-}
-
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
   @override
   Widget build(BuildContext context) {
     final s = AppStrings.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Wordmark(),
-        actions: const [LanguageButton()],
-      ),
+      appBar: AppBar(title: const Wordmark()),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -120,7 +106,6 @@ class PreviewShell extends StatelessWidget {
                 onPressed: onExit ?? () => context.go('/'),
                 icon: Icon(onExit == null ? Icons.swap_horiz : Icons.logout),
               ),
-              const LanguageButton(),
             ],
           ),
           body: SafeArea(
@@ -187,6 +172,13 @@ class PreviewPage extends ConsumerWidget {
         const SizedBox(height: 16),
         const PreviewNotice(),
         const SizedBox(height: 20),
+        if (role == 'baker') ...[
+          FilledButton(
+            onPressed: () => context.go('/baker/setup'),
+            child: const Text('Open baker setup'),
+          ),
+          const SizedBox(height: 16),
+        ],
         if (view == 'home' || view == 'today') ...[
           SectionCard(
             child: Column(
@@ -310,8 +302,6 @@ class PreviewPage extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Text(s.t('Language')),
-                const LanguageButton(),
                 const Divider(),
                 Text(
                   s.t(

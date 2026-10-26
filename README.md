@@ -1,6 +1,6 @@
 # BakeQuote Mobile
 
-Native Flutter/Dart app for customers and home bakers. Phase 2 adds Supabase authentication, private persistent profiles and explicit business ownership. **Live integration acceptance is blocked pending a development backend; see [Phase 2 handoff](docs/phase-2-handoff.md).** Later ordering/catalog workflows are not implemented.
+Native Flutter/Dart app for customers and home bakers. Phase 3 adds English-only baker business setup, catalog/options, fulfilment, authoritative backend estimate RPCs and owned public images. **Live integration acceptance is blocked pending a development backend; see [Phase 3 handoff](docs/phase-3-handoff.md).** Ordering, availability and customer discovery remain later phases.
 
 Validated baseline SDK: Flutter 3.41.1 stable / Dart 3.11.0. Development identifiers: Android `dev.bakequote.bakequote_mobile`, iOS `dev.bakequote.bakequoteMobile`; callback scheme `dev.bakequote.mobile`. These are development defaults, not final store identities.
 
@@ -33,7 +33,7 @@ Copy-Item config/example.json config/local.json
 flutter run -d emulator-5554 --dart-define-from-file=config/local.json
 ```
 
-Changing compile-time settings requires restarting the run/build, not hot reload. Live mode never falls back to sample identity if configuration, sessions or profile reads fail. It shows a retryable unavailable state. Email/password registration, verification/resend, login, recovery/password update, session restoration and logout use the Supabase SDK. First verified sign-in completes an initial customer/baker identity. Bakers receive an owned private business draft; full business onboarding remains Phase 3. Profile/name/phone and owned image uploads are available under Account. Real orders/messages remain later-phase placeholders and show no demo records in live mode.
+Changing compile-time settings requires restarting the run/build, not hot reload. Live mode never falls back to sample identity if configuration, sessions or profile reads fail. It shows a retryable unavailable state. Email/password registration, verification/resend, login, recovery/password update, session restoration and logout use the Supabase SDK. First verified sign-in completes an initial customer/baker identity. Bakers receive an owned private business draft; business setup, catalog and pricing are under Open baker setup. Profile/name/phone and owned image uploads are available under Account. Real orders/messages remain later-phase placeholders and show no demo records in live mode.
 
 Android debug local HTTP is allowed only for localhost/127.0.0.1/10.0.2.2. Hosted configuration requires HTTPS. Native email callbacks use PKCE and must open on the installation that requested them. A completed verification can also be followed by ordinary password sign-in. Reset and verification callbacks are classified by both exact URI and SDK exchange result; changing a URL type parameter cannot turn verification into recovery.
 
@@ -55,7 +55,7 @@ On macOS with Xcode/CocoaPods, run `flutter build ios --simulator`, then `flutte
 - [Database and storage](docs/database-and-storage.md): migrations, grants, policies, paths and test boundaries.
 - [Implementation plan](docs/implementation-plan.md), [traceability](docs/requirements-traceability.md), [decisions](docs/decisions.md).
 - [Reference audit](docs/reference-audit.md): the separate Lovable implementation remains a reference.
-- [Current status](docs/project-status.md) and [Phase 2 verification/handoff](docs/phase-2-handoff.md).
+- [Current status](docs/project-status.md) and [Phase 3 verification/handoff](docs/phase-3-handoff.md).
 
 Phase 1 checkpoint: `7a0e150`. Phase 2 is a separate local commit; inspect `git log -1 --oneline`. No GitHub remote is configured, and this work has **not** been backed up remotely. After you create an empty mobile repository, connect it explicitly:
 
@@ -64,4 +64,33 @@ git remote add origin https://github.com/<owner>/<new-mobile-repository>.git
 git push -u origin main
 ```
 
-Stop before Phase 3. Backend credentials, final role/membership product decisions and live acceptance remain tracked rather than assumed.
+Stop before Phase 4. Backend credentials, final role/membership product decisions and live acceptance remain tracked rather than assumed.
+
+## Phase 3 demonstration and local database checks
+
+BakeQuote is English-only. Legacy stored locale values fall back to English. The remaining fonts are Manrope and Fraunces. There is no language switch.
+
+Open baker preview, then **Open baker setup**. Use Setup, Catalog, Fulfilment, Pricing and Review. Save draft changes explicitly; reopening the app restores the preview workspace on this device. Live mode uses the same controls with Supabase persistence and ownership checks. No sample catalog is installed for real accounts. See the complete [demonstration path](docs/phase-3-handoff.md#demonstration).
+
+For a reproducible isolated PostgreSQL/WASM test of all migrations (Node.js required):
+
+```powershell
+npm.cmd ci --prefix scripts/sql-test
+node scripts/sql-test/verify.mjs
+```
+
+This executes PostgreSQL grants/RLS/functions against modeled Auth/Storage schemas. It does not start or verify Supabase Auth, PostgREST, email, Storage HTTP, bucket MIME limits or native callbacks. The real stack checks remain separate:
+
+```powershell
+npx.cmd --yes supabase@2.122.0 test db
+python scripts/verify_backend.py --config config/local.json
+python scripts/verify_phase3.py --config config/local.json --confirm-development
+```
+
+The HTTP tests require dedicated accounts configured through the secure local prompts in [backend setup](docs/backend-setup.md). The Phase 3 script intentionally replaces the fixture business's catalog/zone availability; use disposable development businesses only.
+
+On this workstation, if Flutter/ADB are not on PATH, prepend their existing installation directories for this PowerShell process:
+
+```powershell
+$env:Path = "D:\flutter\flutter\bin;D:\SDK\platform-tools;" + $env:Path
+```

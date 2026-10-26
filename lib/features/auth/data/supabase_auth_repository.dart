@@ -164,7 +164,7 @@ class SupabaseAuthRepository implements AuthRepository {
       id: userId,
       name: p['display_name'] as String,
       phone: p['phone'] as String,
-      locale: p['locale'] as String,
+      locale: 'en',
       experience: p['initial_experience'] as String?,
       businessId: b?['id'] as String?,
       businessName: b?['name'] as String?,
@@ -197,7 +197,7 @@ class SupabaseAuthRepository implements AuthRepository {
   ) async {
     await client
         .from('profiles')
-        .update({'display_name': name, 'phone': phone, 'locale': locale})
+        .update({'display_name': name, 'phone': phone, 'locale': 'en'})
         .eq('id', userId)
         .select('id')
         .single();

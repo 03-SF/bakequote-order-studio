@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/config/backend_config.dart';
-import '../../../core/l10n/app_strings.dart';
 import '../data/auth_repository.dart';
 import '../data/supabase_auth_repository.dart';
 import '../domain/auth_models.dart';
@@ -171,7 +170,6 @@ class AuthController extends Notifier<AuthViewState> {
   }
 
   Future<void> _accept(Identity? identity) async {
-    final previousId = state.identity?.id;
     final request = ++_epoch;
     if (_disposed) return;
     // Drop the previous profile immediately, before any asynchronous read.
@@ -208,9 +206,6 @@ class AuthController extends Notifier<AuthViewState> {
               !{'customer', 'baker'}.contains(profile.experience)) ||
           (profile.experience == 'baker' && profile.businessId == null)) {
         throw const UserFacingFailure('Account data could not be verified');
-      }
-      if (previousId != identity.id) {
-        ref.read(localeProvider.notifier).setLanguage(profile.locale);
       }
       state = AuthViewState(
         phase: profile.experience == null

@@ -9,13 +9,13 @@ Statuses: Foundation = Phase 1 code; Implemented/pending integration = Phase 2 s
 | F03 | Theme/assets/shared controls | core/theme, shared/widgets, bundled fonts/images | 1 |
 | F04 | Riverpod/go_router/feature separation | app/app.dart, preview repository/providers, domain modules | 1 |
 | F05 | Both role navigation foundations | Customer four destinations, baker five, adaptive rail/tabs | 1 |
-| F06 | English/Urdu + RTL | core/l10n, Material localization delegates, bundled Urdu font; foundation copy translated, fixture names remain data | 1; complete product 9 |
+| F06 | English-only (supersedes bilingual requirement) | English locale and fonts only; old stored preferences ignored; large-text English tests | 3 |
 | F07 | Safe config without credentials | BackendConfig plus explicit preview/live modes; empty public example; SDK initialized only in live mode | 1,2 |
 | A01 | Register/verify/login/reset/session | Supabase repository, auth controller/screens, guards and SDK HTTP-mock tests; real email/native restoration pending | 2 implemented/pending integration |
 | A02 | Profiles/ownership/RLS/storage privacy | Versioned migrations, pgTAP/HTTP tests prepared; no live database/storage execution | 2 implemented/pending integration |
-| B01 | Business onboarding and account preferences | Phase 2 identity/profile editing and owned private draft; full business setup and notification preferences remain planned | 2 foundation; 3,8 |
-| B02 | Products/size/quantity/flavour/finish/extras/images/prices | Read-only sample menu, advisory price objects; planned catalog repositories | 3 |
-| B03 | Delivery zones/fees, minimum, lead time/capacity/blocked dates | Planned transactional availability model | 3,4 |
+| B01 | Business onboarding and profiles | Setup/draft/review/activation/editing/code/share implemented; notification preferences remain Phase 8 | 3 implemented; live pending |
+| B02 | Products/size/quantity/flavour/finish/extras/images/prices | Product/variant/flavour/finish/extra editors, active flags and owned images; SQL/Dart/repository/widget tests | 3 |
+| B03 | Delivery zones/fees, minimum, lead time/capacity/blocked dates | Delivery settings/zones/fees, product quantity minimum and subtotal minimum implemented; lead time/capacity/blocked dates remain Phase 4 | 3,4 |
 | C01 | Bakery code/shared link/profile/menu/availability/saved bakeries | Sample code/profile only; no lookup or saved mutation | 4 |
 | O01 | Customize, date/pickup/delivery/contact/design/images/drafts | Planned request workflow | 5 |
 | O02 | Estimate and submission Pending; no pending capacity reservation | Pure estimate and reservesCapacity tests; planned authoritative RPC/idempotency | 1 foundation; 5 backend |
@@ -35,7 +35,7 @@ Statuses: Foundation = Phase 1 code; Implemented/pending integration = Phase 2 s
 | R01 | Own delivered app order review only | Pure ownership/manual/reviewed eligibility tests; backend unique constraint/RLS planned | 8 |
 | X01 | Notifications/report/block | Planned, no false delivery/moderation claims | 8 |
 | X02 | Offline drafts/cache, blocked authoritative operations | Pure confirm offline precondition; device caching/reconnect planned | 5,9 |
-| X03 | Accessibility and complete localization | SafeArea/scrolling/48px buttons/RTL foundation tests; full device/screen-reader review planned | 1,9 |
+| X03 | Accessibility and readable English | SafeArea/scrolling/48px buttons/large-text tests; full device/screen-reader review planned | 1,9 |
 | X04 | Account deletion/legal/retention | Owner decisions open; secure deletion workflow planned | 9 |
 | X05 | Plans/export/backup/restore | No invented pricing/allowance; owner applicability unresolved | 9 |
 | V01 | Setup/verification/docs/local checkpoint | README, project-status.md, Git checkpoint | 1 |
@@ -56,7 +56,22 @@ Domain port scope is explicit: web date parsing, catalog conflict checking, priv
 | P2-07 | Demo isolation and cache clearing | Preview never initializes SDK; guarded live role routes; stale read/write/logout tests | Local tests pass; live two-account device switching pending |
 | P2-08 | Profile/business images | Owner-scoped uploads, bucket limits, pointer update/cleanup, private signed previews | Real upload/download/unauthorized requests pending |
 | P2-09 | Future private files | Restrictive denial for order/conversation/product buckets | SQL test and HTTP cases prepared, not executed |
-| P2-10 | English/Urdu, visual architecture | Existing tokens/domain rules retained; localized auth/profile screens and narrow 160% RTL form tests | Native Urdu editorial/device acceptance pending |
+| P2-10 | Historical bilingual acceptance (superseded) | Phase 3 English-only cleanup replaces language/RTL-specific criteria; tokens/domain rules retained | English-only acceptance below |
 | P2-11 | Handoff/checkpoint | Backend setup, DB/storage, decisions/status and phase-2-handoff.md; separate local checkpoint | No remote configured; no remote backup |
 
 The one-time initial experience is a provisional UI contract. Whether one account may act in both roles, own multiple businesses or invite a team remains unresolved. Full business setup, publication/catalog, orders and communications remain their original later phases.
+
+## Phase 3 evidence matrix
+
+| Requirement | Implementation/local verification | Live acceptance |
+| --- | --- | --- |
+| English-only and old preference | Dictionary/control/font/dependency removal; normalized profile locale; migration and English large-text tests | Old remote locale migration pending deployment |
+| Business draft/setup/activation | Workspace UI, existing idempotent owned business creation, server required-field checks and revision guards; SQL/widget tests | Supabase save/restart/activation unexecuted |
+| Owner-only writes/public fields | RLS, RPC ownership, private raw tables and approved-field public RPC; two-identity local SQL checks | Real PostgREST two-baker checks prepared, unexecuted |
+| Catalog and applicable options | Cakes/cupcakes, names/descriptions/images, size/pack, product-owned flavour/finish/extras, activation/edit/deactivation; local tests | Real catalog persistence pending |
+| Pricing/fulfilment | Exact integer paisa, quantity/subtotal minima, pickup, named delivery zones/fees, backend estimate and matching preview; PKR 4100 SQL/Dart/widget regression | Live estimate RPC pending |
+| Images/failures/cleanup | Public logo/cover/product controls and owner policies; SDK HTTP-mocked upload/pointer/cleanup tests; SQL referenced-image protection | Actual bucket type/size/upload/download behavior pending |
+| Preview isolation/restart/account switching | Separate device namespace, account-scoped providers, session guard, stale repository rejection and cache clearing | Native two-live-account switching/restart pending |
+| Platform/handoff/checkpoint | See Phase 3 handoff for executed commands and device/build results | iOS requires macOS/Xcode; no remote backup |
+
+No Phase 4 customer discovery/availability workflow is claimed. Dual-role policy remains unresolved; ownership is independent of that decision.

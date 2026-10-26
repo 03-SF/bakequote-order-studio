@@ -19,14 +19,16 @@ class AccountProfile {
     required this.id,
     required this.name,
     required this.phone,
-    this.locale = 'en',
+    String locale = 'en',
     this.experience,
     this.businessId,
     this.businessName,
     this.profileImage,
     this.businessImage,
   });
-  final String id, name, phone, locale;
+  final String id, name, phone;
+  // Old persisted locale values are deliberately ignored.
+  String get locale => 'en';
   final String? experience,
       businessId,
       businessName,

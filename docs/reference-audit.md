@@ -61,3 +61,7 @@ Dart ports the applicable estimate, versioned agreement, revision invalidation, 
 ## Phase 2 boundary
 
 The reference findings above remain historical and unchanged. Native authentication and Supabase migrations are new Flutter/backend work; none are inferred from the Lovable demo. The reference checkout is still separate and was not modified for Phase 2. Preserve its published Lovable history.
+
+## Phase 3 note
+
+The language/font findings above describe the preserved React reference. Current Flutter requirements are English-only; Urdu assets and language controls have been removed. The reference pricing configuration confirms one flavour, one finish and distinct extra IDs per selection. Native catalog options are scoped per product to make applicability explicit. The reference checkout was not changed.

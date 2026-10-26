@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/backend_config.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../shared/widgets/controls.dart';
-import '../../preview/presentation/preview_pages.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_models.dart';
 
@@ -14,7 +13,7 @@ class AuthFrame extends StatelessWidget {
   final List<Widget> children;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Wordmark(), actions: const [LanguageButton()]),
+    appBar: AppBar(title: const Wordmark()),
     body: SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -389,7 +388,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
                 ),
                 Text(
                   s.t(
-                    'This creates a private draft. Full bakery setup arrives in Phase 3.',
+                    'This creates a private business draft. Continue to baker setup after completing your identity.',
                   ),
                 ),
                 const SizedBox(height: 16),

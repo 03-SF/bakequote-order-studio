@@ -1,3 +1,5 @@
+> Archived phase evidence. English/Urdu requirements below are superseded by the Phase 3 English-only decision. Current commands and acceptance status are in the README and Phase 3 handoff.
+
 # Phase 2 verification and handoff
 
 Date: 2026-10-26. Scope: Supabase backend/authentication/access control only. **Implementation is locally validated; live integration acceptance is blocked. Stop before Phase 3.**

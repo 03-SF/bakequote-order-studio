@@ -1,6 +1,6 @@
-# Database and storage access-control foundation
+# Database and storage
 
-Migrations are versioned source, not proof of an applied database. Current live execution is blocked; see [handoff](phase-2-handoff.md).
+Migrations are versioned source, not proof of an applied database. Current live execution is blocked; see [Phase 3 handoff](phase-3-handoff.md). The following Phase 2 baseline is historical; Phase 3 changes below supersede its reserved product bucket, business completion and cleanup descriptions.
 
 ## Identity migration: 20261026000100_identity.sql
 
@@ -47,3 +47,55 @@ Allowed MIME metadata does not replace future image-processing/moderation requir
 4. Flutter tests: fake repository, SDK HTTP mocks, route guards, state clearing and validation. These never substitute for backend permission checks.
 
 No policy is described as live-verified until the corresponding backend tests run against the selected project. Apply migrations using [setup instructions](backend-setup.md), retain migration history, and add reviewed migrations rather than editing an applied schema silently.
+
+## Phase 3 current schema: 20261026000300_baker_catalog.sql
+
+`profiles.locale` is normalized to English before its constraint is narrowed to `en`. The original migrations are preserved. Existing Auth/customer/baker and provisional unique-owner business model remain intact; no new exclusive-role or admin assignment exists.
+
+`businesses` gains bounded description, private owner/contact name and phone, public location, private exact pickup address, cover path, unique server-generated 32-character business code, pickup/delivery flags, bigint minimum_paisa and revision. Existing name/logo/completion fields remain. Identity onboarding creates one owned private draft atomically; workspace editing does not create another business.
+
+`products` contains stable UUID, owning business FK, cake/cupcakes kind, name/description, active flag, minimum cakes/packs per order, image pointer, JSON variants/options and creation time. Each variant has UUID, label, positive grams (cake) or cupcakes-per-pack, integer price_paisa and active flag. Each customization has UUID, label, flavour/finish/extra kind, integer surcharge and active flag. Applicability is containment within that product. The RPC validates types, positive quantities, bounded labels, unique IDs, nonnegative exact money and at least one active variant for an active product. Engineering arrays are bounded at 200 entries each. There are no direct client table mutations.
+
+`delivery_zones` contains stable UUID, owning business FK, bounded name, nonnegative bigint fee_paisa and active flag. Authenticated owners can SELECT their own products/zones through RLS; anon/raw-table access and other owners' reads/writes are denied. No product, option or zone delete API is exposed. Omitted product/zone IDs are deactivated rather than deleted.
+
+| RPC | Access and authority |
+| --- | --- |
+| save_baker_workspace | Authenticated actual owner; locks business; compares revision; transactionally validates/upserts catalog and zones, edits allowed business details and increments revision; rejects cross-business IDs. Ignores injected owner/code/image/completion values |
+| activate_business | Actual owner and matching revision; server requires complete name/description/contact/location/fulfilment details; publishes by setting completion and increments revision |
+| check_business_setup | Internal only; revoked from PUBLIC/anon/authenticated; rechecks subsequent active-business edits as well as activation |
+| validate_catalog | Internal validation helper, no client execute |
+| public_business | Explicit active-only JSON projection for anon/authenticated. Only id/code/name/description/location/public image paths/pickup-delivery flags/minimum. No owner ID/name/contact or exact address |
+| catalog_estimate | Owner may preview a draft; others may estimate only an activated business. Checks product/variant/options/zone applicability and availability, quantity/subtotal minimum, pickup/delivery enabled. Server calculates saved prices and returns integer subtotal/delivery/total, PKR and revision; no client-total argument |
+
+All privileged functions use empty search_path, explicit schema qualification, explicit ownership checks and revoked default execution. Safe public RPCs receive deliberate grants. Business code is an identifier, not a private credential. Draft business rows are not publicly discoverable. Customer lookup/public catalog screens remain Phase 4; only the backend safe business projection is established here.
+
+Prices are integer paisa throughout: PKR 3,000 = 300000. Item quantity scales base plus selected charges, then a single named-zone fee is added. Minimum value excludes delivery. Example: 300000 + 50000 + 30000 = 380000; delivery 30000 gives 410000 (PKR 4,100). No sample catalog is inserted by migrations or normal real-user onboarding. Custom design charges remain explicit quote adjustments in Phase 6.
+
+Future order implementation MUST create immutable snapshots with labels/units/selected options/prices/currency/business revision and pinned image references. Historical orders must not join mutable catalog prices to reconstruct totals. No historical order table exists yet, so current public orphan cleanup does not pretend to implement order-image retention.
+
+## Phase 3 storage: 20261026000400_catalog_storage.sql
+
+All image bucket limits remain 5 MiB/object, JPEG/PNG/WebP. No service key. No UPDATE/upsert policy; every replacement has a new UUID filename.
+
+| Bucket | Current path and permissions |
+| --- | --- |
+| profile-images | Private, unchanged user-ID prefix ownership. Personal account photos never enter public business buckets |
+| business-images | Public bytes; `<business-id>/profile/<file-id>.jpg|png|webp` logo and `<business-id>/cover/<file-id>...` cover. Metadata SELECT/INSERT/DELETE require actual owner |
+| product-images | Public bytes; `<business-id>/<product-id>/<file-id>.jpg|png|webp`. Product must already exist in that owned business. Metadata SELECT/INSERT/DELETE require matching product/business owner |
+| order-references | Private; restrictive denial remains until actual order membership exists |
+| conversation-attachments | Private; restrictive denial remains until participant membership exists |
+
+`set_baker_image` requires the owner, current revision, known slot, owned product where applicable, matching canonical path and existing uploaded storage object. It attaches/removes a pointer and increments revision. A restrictive DELETE policy protects referenced business/product images. This protects uncertain commits during network failure; a client cannot delete the new image while the database points to it.
+
+The repository stores cleanup intent before upload, then attaches the new pointer and acknowledges it locally, queues the previous image and retries removal. Pointer failures/abandoned uploads stay retryable. On an uncertain commit, cleanup reads current pointers before deletion and the database independently protects references. Failed cleanup survives app restart in a per-project/per-user queue; loading the workspace attempts it, and Review offers Retry image cleanup. Queue data never authorizes access; RLS still applies. Loss of local application storage can leave server orphans; no privileged scheduled server cleanup or retention schedule is invented. Personal Phase 2 profile-photo replacement retention is unchanged.
+
+Migration 004 also fixes unqualified storage object-name references: names are explicitly `storage.objects.name`, avoiding a business `name` binding or ambiguous product/business joins. The local runtime test found this defect; it was not detectable by syntax parsing alone.
+
+## Current verification boundaries
+
+- PGlite 0.5.11: actual PostgreSQL execution with modeled Auth/Storage schemas and roles; ownership/grants/RLS/functions/activation/pricing/storage-object checks. This does not execute Supabase services, enforce actual bucket HTTP type/size limits, deliver email or test native restart.
+- Supabase pgTAP: identity_rls.test.sql plus catalog_rls.test.sql, prepared for `supabase test db`; blocked without a running stack.
+- Real HTTP: verify_backend.py and verify_phase3.py use dedicated accounts/public key, never a service key; unexecuted without development configuration.
+- Flutter: pure rules, preview device persistence, HTTP-mocked SDK image failures and widget flows. No claim of live persistence derives from these checks.
+
+Primary policy/function guidance: [Supabase functions](https://supabase.com/docs/guides/database/functions), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Storage access control](https://supabase.com/docs/guides/storage/security/access-control).

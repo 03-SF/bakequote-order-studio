@@ -1,3 +1,5 @@
+> Archived phase evidence. English/Urdu requirements below are superseded by the Phase 3 English-only decision. Current commands and acceptance status are in the README and Phase 3 handoff.
+
 # Project status — Phase 1
 
 Date: 2026-10-26. Scope: Phase 1 only. Phase 2 has not started.

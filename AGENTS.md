@@ -5,12 +5,12 @@ This repository is the new native Flutter app. The sibling Lovable web checkout 
 ## Structure
 
 - `lib/app`: application composition and go_router configuration.
-- `lib/core`: theme, localization and backend configuration.
+- `lib/core`: theme, English copy and backend configuration.
 - `lib/features/<feature>/domain`: pure Dart value objects and rules, no Flutter/network imports.
 - `lib/features/<feature>/data`: repository implementations and DTO mapping.
 - Feature application state belongs in Riverpod providers/controllers, and presentation in widgets.
 - `lib/features/preview`: isolated fixtures, explicitly labeled. Preview roles are not authentication.
-- `lib/shared/widgets`: shared controls. Use directional layout and localized copy.
+- `lib/shared/widgets`: shared controls. Use directional layout and readable English copy.
 
 ## Invariants
 
@@ -20,9 +20,9 @@ No service-role keys or privileged secrets in clients, fixtures or commits. Add 
 
 ## Verification and scope
 
-Run `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze`, `flutter test` and an Android debug build for relevant changes. Record actual results and blockers in `docs/project-status.md`; distinguish iOS checks. Do not claim device acceptance from widget tests. Test version agreement and capacity races at the database boundary when implemented. Keep both languages and narrow RTL layouts usable.
+Run `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze`, `flutter test` and an Android debug build for relevant changes. Record actual results and blockers in `docs/project-status.md`; distinguish iOS checks. Do not claim device acceptance from widget tests. Test version agreement and capacity races at the database boundary when implemented. Keep English layouts accessible at narrow widths and large text sizes.
 
-Current authorized scope: Phase 2 only. Stop before Phase 3. Live backend acceptance is blocked until a migrated project and secure local configuration are supplied. Maintain all handoff documents. Commit local checkpoints when requested; never rewrite published reference history.
+Current authorized scope: Phase 3 only. Stop before Phase 4. Live backend acceptance is blocked until a migrated project and secure local configuration are supplied. Maintain all handoff documents. Commit local checkpoints when requested; never rewrite published reference history.
 
 ## Phase 2 access boundaries
 

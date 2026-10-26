@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -39,6 +40,11 @@ class LivePage extends ConsumerWidget {
           style: Theme.of(context).textTheme.headlineLarge,
         ),
         const SizedBox(height: 24),
+        if (profile.businessId != null)
+          FilledButton(
+            onPressed: () => context.go('/live/baker/setup'),
+            child: const Text('Open baker setup'),
+          ),
         SectionCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,7 +60,7 @@ class LivePage extends ConsumerWidget {
                 Text(profile.businessName!),
                 Text(
                   s.t(
-                    'This creates a private draft. Full bakery setup arrives in Phase 3.',
+                    'Open baker setup to edit your business, catalog and pricing.',
                   ),
                 ),
               ],
@@ -164,11 +170,7 @@ class _LiveAccountState extends ConsumerState<LiveAccount> {
                         if (_form.currentState!.validate()) {
                           ref
                               .read(authControllerProvider.notifier)
-                              .saveProfile(
-                                _name.text,
-                                _phone.text,
-                                ref.read(localeProvider).languageCode,
-                              );
+                              .saveProfile(_name.text, _phone.text, 'en');
                         }
                       },
                 child: Text(s.t(busy ? 'Saving...' : 'Save profile')),

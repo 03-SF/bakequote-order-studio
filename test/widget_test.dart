@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bakequote_mobile/app/app.dart';
-import 'package:bakequote_mobile/core/l10n/app_strings.dart';
 
 void main() {
   testWidgets('Both role shells navigate and quotation opens', (tester) async {
@@ -37,7 +36,7 @@ void main() {
       expect(tester.takeException(), isNull);
     }
   });
-  testWidgets('Urdu RTL and large text work at narrow mobile width', (
+  testWidgets('English startup and large text work at narrow mobile width', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(390, 844);
@@ -48,7 +47,6 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    container.read(localeProvider.notifier).toggle();
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
@@ -57,13 +55,13 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(
-      Directionality.of(tester.element(find.text('گاہک کا پیش نظارہ دیکھیں'))),
-      TextDirection.rtl,
+      Directionality.of(tester.element(find.text('Explore customer preview'))),
+      TextDirection.ltr,
     );
-    await tester.ensureVisible(find.text('گاہک کا پیش نظارہ دیکھیں'));
-    await tester.tap(find.text('گاہک کا پیش نظارہ دیکھیں'));
+    await tester.ensureVisible(find.text('Explore customer preview'));
+    await tester.tap(find.text('Explore customer preview'));
     await tester.pumpAndSettle();
-    for (final title in ['آرڈرز', 'پیغامات', 'اکاؤنٹ', 'ہوم']) {
+    for (final title in ['Orders', 'Messages', 'Account', 'Home']) {
       await tester.tap(find.text(title).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

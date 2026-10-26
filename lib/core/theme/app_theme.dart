@@ -10,7 +10,7 @@ abstract final class BakeColors {
   static const border = Color(0xFFEADDE0);
 }
 
-ThemeData bakeTheme({required bool urdu}) {
+ThemeData bakeTheme() {
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(seedColor: BakeColors.rose).copyWith(
@@ -22,16 +22,16 @@ ThemeData bakeTheme({required bool urdu}) {
       outlineVariant: BakeColors.border,
     ),
     scaffoldBackgroundColor: BakeColors.cream,
-    fontFamily: urdu ? 'NotoNastaliqUrdu' : 'Manrope',
+    fontFamily: 'Manrope',
   );
   return base.copyWith(
     textTheme: base.textTheme.copyWith(
       headlineLarge: base.textTheme.headlineLarge?.copyWith(
-        fontFamily: urdu ? 'NotoNastaliqUrdu' : 'Fraunces',
+        fontFamily: 'Fraunces',
         fontWeight: FontWeight.w600,
       ),
       headlineSmall: base.textTheme.headlineSmall?.copyWith(
-        fontFamily: urdu ? 'NotoNastaliqUrdu' : 'Fraunces',
+        fontFamily: 'Fraunces',
         fontWeight: FontWeight.w600,
       ),
     ),
