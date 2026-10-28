@@ -1,0 +1,6 @@
+{
+  "APP_MODE": "live",
+  "SUPABASE_URL": "",
+  "SUPABASE_PUBLISHABLE_KEY": "",
+  "AUTH_CALLBACK_BASE": "http://localhost:7357/auth"
+}

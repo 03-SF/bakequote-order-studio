@@ -1,5 +1,9 @@
 # Requirements traceability
 
+Phase 4 latest: baker calendar/settings/blocking and customer bakery/menu/pricing/fulfilment/availability/saved/recent/link navigation are implemented. Evidence: 57 Flutter tests, 81 modeled SQL checks, nine limited new live endpoints; real two-baker Chrome/permissions acceptance remains blocked. Availability uses date-only business-timezone semantics and an inaccessible future allocation contract; no live orders or fake occupancy. Earlier availability-planned statements below are superseded by [Phase 4 handoff](phase-4-handoff.md).
+
+Latest evidence (2026-10-28): see [integration verification](integration-verification.md) and [Phase 4 continuation](phase-4-handoff.md). Older unconfigured/unlinked environment notes below are historical. Native acceptance is explicitly deferred. C01 public profiles/menus and saved bakeries now have implementation and modeled tests; full availability and native shared-link acceptance remain pending.
+
 Statuses: Foundation = Phase 1 code; Implemented/pending integration = Phase 2 source and local tests, with live backend acceptance unverified; Planned = later work. See the Phase 2 evidence matrix below.
 
 | ID | Requirement | Current evidence / status | Delivery phase |
@@ -16,7 +20,7 @@ Statuses: Foundation = Phase 1 code; Implemented/pending integration = Phase 2 s
 | B01 | Business onboarding and profiles | Setup/draft/review/activation/editing/code/share implemented; notification preferences remain Phase 8 | 3 implemented; live pending |
 | B02 | Products/size/quantity/flavour/finish/extras/images/prices | Product/variant/flavour/finish/extra editors, active flags and owned images; SQL/Dart/repository/widget tests | 3 |
 | B03 | Delivery zones/fees, minimum, lead time/capacity/blocked dates | Delivery settings/zones/fees, product quantity minimum and subtotal minimum implemented; lead time/capacity/blocked dates remain Phase 4 | 3,4 |
-| C01 | Bakery code/shared link/profile/menu/availability/saved bakeries | Sample code/profile only; no lookup or saved mutation | 4 |
+| C01 | Bakery code/shared link/profile/menu/availability/saved bakeries | Live code/pasted-link lookup, safe profiles/menus, paginated saved mutation implemented; availability and native link launch deferred/pending | 4 partial |
 | O01 | Customize, date/pickup/delivery/contact/design/images/drafts | Planned request workflow | 5 |
 | O02 | Estimate and submission Pending; no pending capacity reservation | Pure estimate and reservesCapacity tests; planned authoritative RPC/idempotency | 1 foundation; 5 backend |
 | O03 | Review versioned quote, agreement, revision invalidation | Pure Dart tests + illustrative quote sheet; no workflow calls | 1 foundation; 6 workflow |

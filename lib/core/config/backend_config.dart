@@ -24,6 +24,11 @@ class BackendConfig {
   String? get validationError {
     if (mode != 'preview' && mode != 'live') return 'Invalid app mode';
     if (isPreview) return null;
+    if (url.trim().isEmpty || publishableKey.trim().isEmpty) {
+      return 'Live backend setup is missing. Set SUPABASE_URL and '
+          'SUPABASE_PUBLISHABLE_KEY in config/local.json, then restart with '
+          '--dart-define-from-file=config/local.json.';
+    }
     final callbackUri = Uri.tryParse(callbackBase);
     final nativeCallback = callbackBase == 'dev.bakequote.mobile://auth';
     final localCallback =

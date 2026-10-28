@@ -1,5 +1,9 @@
 # Implementation plan
 
+Phase 4 implementation update: availability configuration/calendar, server date/status contract, blocking/conflict handling, customer public availability, saved/recent access and browser link-through-login routing are now implemented. Positive cross-account/live Chrome acceptance requires dedicated baker accounts; local/model checks are separately recorded. Phase 5 must integrate real order occupancy transactionally; no order workflow was introduced here. See [handoff](phase-4-handoff.md). Scheduling semantics are provisional decisions 39–43, not previously approved policy.
+
+Current override (2026-10-28): owner authorized laptop verification followed by Phase 4 once exact blockers are documented, and deferred native installation/acceptance. Customer discovery is implemented and deployed; availability semantics and full Phase 4 completion remain pending. See [Phase 4 continuation](phase-4-handoff.md). Earlier phase-stop statements below describe historical gates and are superseded by this instruction. Do not begin Phase 5.
+
 ## Architectural boundaries
 
 Flutter is the Android/iOS product. The generated web target exists solely to make the same Flutter foundation easy to inspect. Riverpod owns state/repository injection; go_router owns navigation. Feature layout is domain/application/data/presentation as features are introduced (avoid empty boilerplate folders). Current preview repository and providers remain separate from future authenticated data. Theme/English copy/config are shared core facilities. No TypeScript runtime or WebView.

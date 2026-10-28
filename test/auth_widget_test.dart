@@ -26,7 +26,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Account unavailable'), findsOneWidget);
-      expect(find.text('Invalid backend configuration'), findsOneWidget);
+      expect(
+        find.textContaining('Live backend setup is missing.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('--dart-define-from-file='), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     },
   );
@@ -42,6 +46,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Sign in'), findsWidgets);
+      c.read(routerProvider).go('/bakery/ABCDEF0123456789ABCDEF0123456789');
+      await tester.pumpAndSettle();
       expect(find.text('Explore customer preview'), findsNothing);
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
       await tester.pumpAndSettle();
@@ -54,7 +60,20 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(1), 'password');
       await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
       await tester.pumpAndSettle();
-      expect(find.text('alice@example.test'), findsOneWidget);
+      expect(find.text('Find a bakery'), findsOneWidget);
+      expect(
+        c
+            .read(routerProvider)
+            .routeInformationProvider
+            .value
+            .uri
+            .queryParameters['bakery'],
+        'ABCDEF0123456789ABCDEF0123456789',
+      );
+      expect(
+        c.read(authControllerProvider).identity?.email,
+        'alice@example.test',
+      );
       expect(find.text('Sara Ahmed'), findsNothing);
       c.read(routerProvider).go('/live/baker/today');
       await tester.pumpAndSettle();

@@ -8,6 +8,7 @@ import sys
 import urllib.error
 import uuid
 from verify_backend import Api, PNG, check
+from backend_setup import SetupError, load_live_config, require_accounts
 
 
 def run(config):
@@ -74,11 +75,19 @@ def run(config):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='config/local.json')
+    parser.add_argument('--preflight-only', action='store_true', help='Validate inputs without making network requests')
     parser.add_argument('--confirm-development', action='store_true', required=True, help='Only dedicated disposable businesses; replaces their catalog/zone availability')
     args = parser.parse_args()
     try:
-        with open(args.config, encoding='utf-8-sig') as handle:
-            run(json.load(handle))
+        config = load_live_config(args.config)
+        require_accounts(('BAKER_A', 'BAKER_B'))
+        if args.preflight_only:
+            print('Setup inputs present. Project identity and live behavior remain unverified; no requests made.')
+            return 0
+        run(config)
+    except SetupError as error:
+        print('BLOCKED:', str(error), file=sys.stderr)
+        return 2
     except (OSError, ValueError, AssertionError, KeyError, urllib.error.URLError) as error:
         print('FAILED:', str(error) if isinstance(error, (ValueError, AssertionError, KeyError)) else type(error).__name__, file=sys.stderr)
         return 1

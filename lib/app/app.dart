@@ -10,6 +10,8 @@ import '../features/auth/domain/auth_models.dart';
 import '../features/auth/presentation/auth_pages.dart';
 import '../features/auth/presentation/live_pages.dart';
 import '../features/baker/presentation/baker_pages.dart';
+import '../features/discovery/domain/discovery.dart';
+import '../features/availability/application/availability_controller.dart';
 
 class AuthRouterRefresh extends ChangeNotifier {
   void refresh() => notifyListeners();
@@ -18,6 +20,7 @@ class AuthRouterRefresh extends ChangeNotifier {
 final routerProvider = Provider<GoRouter>((ref) {
   final preview = ref.watch(backendConfigProvider).isPreview;
   final refresh = AuthRouterRefresh();
+  String? pendingBakery;
   ref.listen(authControllerProvider, (previous, next) {
     if (previous?.identity?.id != next.identity?.id) {
       PaintingBinding.instance.imageCache.clear();
@@ -27,13 +30,39 @@ final routerProvider = Provider<GoRouter>((ref) {
   });
   final router = GoRouter(
     refreshListenable: refresh,
-    redirect: (context, state) => authRedirect(
-      ref.read(authControllerProvider),
-      state.uri.path,
-      preview: preview,
-    ),
+    redirect: (context, state) {
+      final auth = ref.read(authControllerProvider);
+      if (!preview &&
+          auth.phase != AuthPhase.signedIn &&
+          state.uri.path == '/live/customer/home') {
+        pendingBakery ??= bakeryCode(state.uri.queryParameters['bakery'] ?? '');
+      }
+      if (!preview && state.uri.path.startsWith('/bakery/')) {
+        pendingBakery = bakeryCode(
+          state.pathParameters['code'] ??
+              state.uri.path.substring('/bakery/'.length),
+        );
+      }
+      final redirect = authRedirect(auth, state.uri.path, preview: preview);
+      if (!preview &&
+          auth.phase == AuthPhase.signedIn &&
+          auth.profile?.experience == 'customer' &&
+          pendingBakery != null) {
+        final code = pendingBakery!;
+        pendingBakery = null;
+        return '/live/customer/home?bakery=$code';
+      }
+      if (!preview && state.uri.path.startsWith('/bakery/')) {
+        return redirect ?? '/auth/login';
+      }
+      return redirect;
+    },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const WelcomePage()),
+      GoRoute(
+        path: '/bakery/:code',
+        builder: (context, state) => const WelcomePage(),
+      ),
       for (final view in [
         'loading',
         'session-error',
@@ -91,7 +120,25 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '${preview ? '' : '/live'}/$role/$view',
                 builder: (context, state) => preview
                     ? PreviewPage(role: role, view: view)
-                    : LivePage(view: view),
+                    : LivePage(
+                        view: view,
+                        initialCode: bakeryCode(
+                          state.uri.queryParameters['bakery'] ?? '',
+                        ),
+                      ),
+                onExit: (context, state) =>
+                    !preview &&
+                        view == 'calendar' &&
+                        ref.read(authControllerProvider).phase ==
+                            AuthPhase.signedIn
+                    ? confirmBakerExit(
+                        context,
+                        dirty: ref.read(availabilityDirtyProvider),
+                        discarded: () => ref
+                            .read(availabilityDirtyProvider.notifier)
+                            .set(false),
+                      )
+                    : true,
               ),
           ],
         ),

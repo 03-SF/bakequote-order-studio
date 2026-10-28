@@ -26,3 +26,14 @@ Date: 2026-10-26. Baseline verified at clean `7c6b03c`. Scope is Phase 3A archit
 ## Verification distinction
 
 The Phase 3 recorded 48 Flutter tests, 41 PGlite SQL checks and Android debug APK build were performed before this audit. This phase reruns Flutter formatting, analysis and tests, PGlite SQL checks and the Android debug build after boundary changes. A PGlite result is local modeled PostgreSQL evidence. It is not a live Supabase deployment, Auth, email, PostgREST or Storage test. Real device/native behavior is reported independently in the current handoff.
+
+## Phase 4 audit addendum (2026-10-28)
+
+| Requirement | Evidence | Gap | Required correction | Phase | Status |
+| --- | --- | --- | --- | --- | --- |
+| DAT-09 concurrent settings | revision-checked save/block RPC; month navigation disabled while dirty | Positive two-client hosted check needs baker accounts | Run real stale-save test with owner sessions | 4 | Implemented; local/model tests passed |
+| SEC-03 denied mutation unchanged | modeled revision/target assertion; verify_cross_account.py snapshots both owners and known object bytes | Two confirmed baker credentials missing | Run prepared HTTP suite; do not infer from status codes | 4 | Live blocked |
+| SEC-04 public visibility | calendar public projection excludes orders/counts; unpublished lookup null; active zone name/fee only | Full customer/baker browser demo absent | Complete dedicated account demo | 4 | Modeled and limited live checks |
+| PERF-07 bounds | calendar max 62 days, 20 recent entries, keyset menu/saved | No latency benchmark measured | Measure proposed NFR targets on approved hardware | 10 | Bounds tested; performance unmeasured |
+| DAT-07 input retention | conflict retains text; explicit discard/reload; navigation guard | Native keyboard/screen reader deferred | Device acceptance later | 4,10 | Widget 200% text tested |
+| DAT-10 atomic capacity | no client allocation writes; business-lock transaction contract | Actual order FK/confirmation/idempotency not implemented | Integrate and race-test in later phases | 5,6 | Contract only; isolated occupancy fixtures |

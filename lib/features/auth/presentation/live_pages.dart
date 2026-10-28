@@ -7,6 +7,9 @@ import '../../../shared/widgets/controls.dart';
 import '../application/auth_controller.dart';
 import '../domain/auth_models.dart';
 import 'auth_pages.dart';
+import '../../discovery/discovery.dart';
+import '../../availability/availability.dart';
+import '../../baker/application/baker_providers.dart';
 
 final accountImageProvider = FutureProvider.autoDispose.family<String, bool>((
   ref,
@@ -19,8 +22,9 @@ final accountImageProvider = FutureProvider.autoDispose.family<String, bool>((
 });
 
 class LivePage extends ConsumerWidget {
-  const LivePage({required this.view, super.key});
+  const LivePage({required this.view, this.initialCode, super.key});
   final String view;
+  final String? initialCode;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(authControllerProvider), s = AppStrings.of(context);
@@ -30,6 +34,35 @@ class LivePage extends ConsumerWidget {
     }
     if (view == 'account') {
       return LiveAccount(key: ValueKey(profile.id), profile: profile);
+    }
+    if (view == 'home' && profile.experience == 'customer') {
+      return DiscoveryPage(
+        initialCode: initialCode,
+        key: ValueKey('${profile.id}:$initialCode'),
+      );
+    }
+    if (view == 'calendar' && profile.businessId != null) {
+      return ref
+          .watch(bakerWorkspaceProvider)
+          .when(
+            data: (workspace) => ListView(
+              padding: const EdgeInsets.all(24),
+              children: [
+                AvailabilityPanel(
+                  key: ValueKey(workspace.id),
+                  code: workspace.business['code'],
+                  ownerId: workspace.id,
+                ),
+              ],
+            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, _) => Center(
+              child: TextButton(
+                onPressed: () => ref.invalidate(bakerWorkspaceProvider),
+                child: const Text('Could not load bakery. Retry'),
+              ),
+            ),
+          );
     }
     return ListView(
       padding: const EdgeInsets.all(24),

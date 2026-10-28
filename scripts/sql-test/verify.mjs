@@ -132,5 +132,97 @@ await as('authenticated',a,async()=>{
   await denied(()=>db.query('SELECT public.catalog_estimate($1,$2,$3,10000,$4)',[product,variant,heavy[0].options.map(o=>o.id),zone]),'oversized estimate rejected before client precision loss','22023');
  } finally {await db.exec('ROLLBACK');}
 });
+// Phase 4 customer discovery: real PostgreSQL execution with modeled identities.
+await as('authenticated',a,()=>save(7));
+await as('anon',null,async()=>{
+ const menu=(await db.query('SELECT * FROM public.public_menu($1,NULL,1)',[codeA.toLowerCase()])).rows;
+ check(menu.length===1,'public menu code normalizes and returns bounded active products');
+ const item=Object.values(menu[0])[0];
+ check(!('business_id' in item) && !('active' in item) && !('active' in item.options[0]),'menu explicit projection excludes internal fields');
+ check((await db.query('SELECT * FROM public.public_menu($1,$2,1)',[codeA,product])).rows.length===0,'menu keyset cursor has no repeated item');
+ await denied(()=>db.query('SELECT * FROM public.public_menu($1,NULL,31)',[codeA]),'oversized menu page rejected','22023');
+ await denied(()=>db.query('SELECT public.set_saved_business($1,true)',[businessA]),'anonymous saves denied','42501');
+});
+await as('authenticated',c,async()=>{
+ await db.query('SELECT public.set_saved_business($1,true)',[businessA]);
+ await db.query('SELECT public.set_saved_business($1,true)',[businessA]);
+ check(await scalar('SELECT count(*)::int FROM public.saved_businesses')===1,'saved bakery duplicate retry is idempotent');
+ check((await db.query('SELECT * FROM public.saved_bakeries(NULL,20)')).rows[0].profile.name==='A bakery','saved bakery returns public profile');
+});
+await as('authenticated',b,async()=>{
+ check(await scalar('SELECT count(*)::int FROM public.saved_businesses')===0,'other account cannot read saved bakeries');
+ await denied(()=>db.query('INSERT INTO public.saved_businesses VALUES($1,$2)',[c,businessB]),'direct cross-account saved insert denied','42501');
+ await denied(()=>db.query('SELECT public.set_business_publication($1,8,false)',[businessA]),'other baker cannot unpublish business','42501');
+});
+await as('authenticated',a,()=>db.query('SELECT public.set_business_publication($1,8,false)',[businessA]));
+await as('anon',null,async()=>{
+ check(await scalar('SELECT public.public_business($1)',[codeA])===null,'unpublished bakery hidden');
+ check((await db.query('SELECT * FROM public.public_menu($1)',[codeA])).rows.length===0,'unpublished menu hidden');
+});
+await as('authenticated',c,async()=>{
+ check((await db.query('SELECT * FROM public.saved_bakeries()')).rows[0].profile===null,'saved unavailable bakery exposes no private fallback');
+ await db.query('SELECT public.set_saved_business($1,false)',[businessA]);
+ check(await scalar('SELECT count(*)::int FROM public.saved_businesses')===0,'unavailable saved bakery can be removed');
+ await denied(()=>db.query('SELECT public.set_saved_business($1,true)',[businessA]),'cannot newly save unpublished bakery','22023');
+});
+// Phase 4: isolated allocations are fixtures, never written to the live service.
+await as('authenticated',a,async()=>{
+ await db.query('SELECT public.set_business_publication($1,9,true)',[businessA]);
+ await db.query("SELECT public.save_availability($1,0,'Asia/Karachi',2,2)",[businessA]);
+ await denied(()=>db.query("SELECT public.save_availability($1,0,'UTC',0,1)",[businessA]),'availability stale revision rejected','40001');
+ await denied(()=>db.query("SELECT public.save_availability($1,1,'Bad/Timezone',0,1)",[businessA]),'invalid timezone rejected','22023');
+ await denied(()=>db.query("SELECT public.save_availability($1,1,'UTC',-1,1)",[businessA]),'negative lead rejected','22023');
+});
+const today=await scalar("SELECT (now() AT TIME ZONE 'Asia/Karachi')::date");
+const day=await scalar("SELECT (now() AT TIME ZONE 'Asia/Karachi')::date+5");
+await as('authenticated',a,async()=>{
+ await denied(()=>db.query('SELECT public.set_blocked_date($1,1,$2::date-1,true)',[businessA,today]),'past date cannot be blocked','22023');
+ await db.query('SELECT public.set_blocked_date($1,1,$2,true)',[businessA,day]);
+ check((await scalar('SELECT public.bakery_availability($1,$2,1)',[codeA,day])).days[0].state==='blocked','blocked date persists');
+ await db.query('SELECT public.set_blocked_date($1,2,$2,false)',[businessA,day]);
+});
+await as('authenticated',b,async()=>{
+ await denied(()=>db.query("SELECT public.save_availability($1,3,'UTC',0,1)",[businessA]),'other baker settings denied','42501');
+ await denied(()=>db.query('SELECT public.set_blocked_date($1,3,$2,true)',[businessA,day]),'other baker blocking denied','42501');
+});
+check(await scalar('SELECT revision FROM public.availability_settings WHERE business_id=$1',[businessA])===3,'denied mutations leave target unchanged');
+for (const status of ['pending','confirmed','baking','ready','delivered','declined','withdrawn','cancelled']) {
+ await db.query('INSERT INTO public.capacity_allocations VALUES($1,gen_random_uuid(),$2,$3)',[businessA,day,status]);
+}
+check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===4,'only confirmed baking ready delivered consume capacity');
+await as('anon',null,async()=>{
+ const result=await scalar('SELECT public.bakery_availability($1,$2,1)',[codeA,day]);
+ check(result.days[0].state==='full' && !('daily_capacity' in result) && !('order_id' in result),'public full state excludes private occupancy');
+ await denied(()=>db.query('SELECT * FROM public.capacity_allocations'),'allocation identities private','42501');
+ await denied(()=>db.query('SELECT public.bakery_availability($1,$2,63)',[codeA,day]),'calendar range bounded','22023');
+});
+await as('authenticated',a,()=>denied(()=>db.query('SELECT public.set_blocked_date($1,3,$2,true)',[businessA,day]),'block cannot cancel existing bookings','23514'));
+await db.query("UPDATE public.capacity_allocations SET status='cancelled' WHERE business_id=$1",[businessA]);
+check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===0,'cancellation releases capacity');
+for (const [date,today,lead,expected] of [['2027-01-01','2026-12-31',1,'available'],['2027-01-01','2026-12-31',2,'lead-time-restricted'],['2026-12-30','2026-12-31',0,'past'],['2028-02-29','2028-02-28',1,'available']]) {
+ check(await scalar('SELECT public.availability_state($1,$2,$3,2,0,false)',[date,today,lead])===expected,`date boundary ${date} ${expected}`);
+}
+check(await scalar("SELECT (('2026-12-31 20:00:00+00'::timestamptz AT TIME ZONE 'Asia/Karachi')::date)::text")==='2027-01-01','business timezone crosses year independently of device');
+await as('authenticated',c,async()=>{
+ await db.query('SELECT public.record_bakery_open($1)',[businessA]);
+ await db.query('SELECT public.record_bakery_open($1)',[businessA]);
+ check(await scalar('SELECT count(*)::int FROM public.recent_businesses')===1,'recent open deduplicates');
+ check((await db.query('SELECT * FROM public.recent_bakeries()')).rows[0].profile.name==='A bakery','recent public projection');
+});
+await as('authenticated',b,async()=>{
+ check(await scalar('SELECT count(*)::int FROM public.recent_businesses')===0,'recent history belongs to user');
+ await denied(()=>db.query('INSERT INTO public.recent_businesses(user_id,business_id) VALUES($1,$2)',[c,businessB]),'recent cross-account writes denied','42501');
+});
+for(let i=1;i<=21;i++) {
+ const uid=`70000000-0000-4000-8000-${String(i).padStart(12,'0')}`;
+ await db.query('INSERT INTO auth.users(id,email_confirmed_at) VALUES($1,now())',[uid]);
+ await as('authenticated',uid,()=>db.query("SELECT public.complete_identity('baker','Recent fixture','','Recent fixture')"));
+ const bid=await scalar('UPDATE public.businesses SET onboarding_complete=true WHERE owner_id=$1 RETURNING id',[uid]);
+ await as('authenticated',c,()=>db.query('SELECT public.record_bakery_open($1)',[bid]));
+}
+await as('authenticated',c,()=>checkAsyncRecent());
+async function checkAsyncRecent() {check(await scalar('SELECT count(*)::int FROM public.recent_businesses')===20,'recent history stays bounded at 20');}
+await as('authenticated',a,()=>db.query('SELECT public.set_business_publication($1,10,false)',[businessA]));
+await as('anon',null,()=>scalar('SELECT public.bakery_availability($1)',[codeA]).then(r=>check(r===null,'unpublished availability hidden by direct code')));
 console.log(`${passed} local PostgreSQL runtime checks passed. Supabase services remain unverified.`);
 await db.close();

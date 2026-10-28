@@ -1,8 +1,12 @@
 # Supabase development setup
 
+Latest attempt and scenario-by-scenario evidence: [live integration verification](integration-verification.md). Live acceptance remains blocked until the documented development project/configuration/accounts exist.
+
+Start with the short numbered [hosted development owner guide](hosted-development-setup.md) when Docker/Podman are unavailable. HTTP runners now validate configuration and every required account before requests; `--preflight-only` checks these inputs without contacting Supabase. Missing setup reports `BLOCKED` (exit 2), not a raw file exception. No key values are printed. Actual registration, verification/resend and recovery are explicitly manual Flutter/email acceptance; the HTTP runner no longer sends signup to an invented example.test mailbox.
+
 ## Observed environment
 
-The current checkout has no `config/local.json`, linked project or Supabase environment configuration. Supabase CLI 2.122.0 is available through npx. Project listing failed with `AccessTokenRequiredError`: no CLI login/access token. Local status failed with `StatusDbInspectError`: Docker and Podman were not found. No migrations or permission tests have executed against Supabase services. Phase 3 separately executes all migrations and ownership/pricing checks in a local PostgreSQL/WASM model; it does not verify Supabase Auth/PostgREST/Storage. SQL parsing remains syntax-only.
+The current checkout has an ignored `config/local.json` template with empty URL/key, but no linked project or usable Supabase configuration. Supabase CLI 2.122.0 is available through npx. Project listing failed with `AccessTokenRequiredError`: no CLI login/access token. Local status failed with `StatusDbInspectError`: Docker and Podman were not found. No migrations or permission tests have executed against Supabase services. Phase 3 separately executes all migrations and ownership/pricing checks in a local PostgreSQL/WASM model; it does not verify Supabase Auth/PostgREST/Storage. SQL parsing remains syntax-only.
 
 Architecture and acceptance boundaries are in [architecture.md](architecture.md) and [non-functional-requirements.md](non-functional-requirements.md). The local SQL model is not a hosted backend check. Execute identity and catalog RLS/storage tests against an isolated development project before treating live behavior as verified.
 
@@ -95,7 +99,7 @@ foreach ($testRole in $testRoles) {
 }
 ```
 
-Use isolated fixture accounts: the script initializes/updates their names, tests token refresh and ownership, uploads/removes test images, and creates one unverified signup fixture. Remove that signup fixture through the Auth dashboard afterward. Request bodies/tokens are not printed. The script verifies anonymous rejection, cross-profile/cross-business writes, forbidden experience assignment, own uploads, unrelated private-file access and closed future buckets. It does not test actual email delivery, app restarts, native callbacks or UI account caching; follow the [handoff matrix](phase-2-handoff.md) for those.
+Use isolated fixture accounts: the script initializes/updates their names, tests token refresh and ownership, and uploads/removes test images. Request bodies/tokens are not printed. The script verifies anonymous rejection, cross-profile/cross-business writes, forbidden experience assignment, own uploads, unrelated private-file access and closed future buckets. It does not test new registration, actual email delivery, app restarts, native callbacks or UI account caching; follow the [current evidence matrix](integration-verification.md) for those. Real registration must be observed in Flutter with a fresh permitted inbox; a placeholder signup address or an enumeration-safe response is not evidence of delivered verification.
 
 ## What is needed to unblock live acceptance
 
@@ -142,3 +146,51 @@ To unblock live checks, the owner must supply **locally**, not in chat:
 3. Configured email sender/confirmation/reset redirects and three dedicated verified account credentials through the secure process-environment prompts.
 
 Then execute migrations, pgTAP/HTTP suites and the native sign-up/email/restart/account-switch/upload demonstration. These live checks remain blocked until those steps run. iOS separately requires macOS/Xcode and an appropriate simulator/device.
+
+
+## Laptop-only Flutter Web verification
+
+2026-10-28 configuration confirmation: the hosted development allowlist now contains both native callbacks plus `http://localhost:7357/auth/verify` and `http://localhost:7357/auth/reset`. A read-only CLI diff confirms the declared allowlist matches. Email confirmation remains enabled and the native Site URL is preserved. This is configuration evidence only; browser verification/recovery email round trips still need testing.
+
+The owner deferred Android APK installation and native acceptance on 2026-10-28. Do not retry emulators for this verification. Android/iOS remain the product; this browser host is development-only.
+
+Use ignored `config/web.local.json` (copy the exact public URL/key from `config/local.json`, set `APP_MODE` to `live`, and `AUTH_CALLBACK_BASE` to `http://localhost:7357/auth`). A credential-free example is `config/web.example.json`. Do not change the native callback base. Add `http://localhost:7357/auth/verify` and `http://localhost:7357/auth/reset` to hosted Auth Redirect URLs **alongside** both mobile URLs. Keep the native Site URL. Browser redirects must be confirmed in the dashboard; a local config file alone does not apply them. Use the same browser profile/origin for PKCE initiation and email return. No automated email is sent by these checks.
+
+From the Flutter repository in PowerShell:
+
+```powershell
+$env:Path = "D:\flutter\flutter\bin;" + $env:Path
+flutter pub get
+flutter build web --debug --no-web-resources-cdn --dart-define-from-file=config/web.local.json
+python scripts/serve_flutter_web.py
+```
+
+Open `http://localhost:7357` in Chrome. This static debug server has SPA callback fallback and does not log request URLs containing auth codes. It binds loopback only. Port 5173 is the separate React reference, not this Flutter app. Browser session tokens use SDK/browser storage; use dedicated development browser profiles and log out after testing. Changing dart-defines requires rebuilding. Native token storage, callback handlers, gallery permissions, push and device acceptance are not proven by Chrome.
+
+Automated checks (a second terminal while the host runs):
+
+```powershell
+python -m pip install --target build/browser-tools playwright==1.55.0
+python scripts/verify_single_account.py
+python scripts/verify_web_account.py
+```
+
+Run these two account-mutating suites sequentially. They use the existing ignored `config/email-check.local.json` fixture credentials. Do not create or expose credentials in source; the browser script may complete customer onboarding for that dedicated fixture. It requires installed Google Chrome and modifies/restores the test profile name. No signup/resend/reset is performed. Multi-account suites still require their six `BQ_TEST_*` environment variables; these single-account checks do not replace them.
+
+Native callbacks, native storage/session lifecycle, permissions, push notifications, Android/iOS builds/devices and device acceptance are deferred, not passed. Browser reset/verification callbacks remain separately unverified until allowlist confirmation and an actual same-browser email flow.
+
+## Phase 4 verification commands
+
+Run from mobile in the terminal containing securely entered BQ_TEST account variables:
+
+```powershell
+python scripts/verify_cross_account.py --preflight-only
+python scripts/verify_cross_account.py
+python scripts/verify_phase3.py --confirm-development
+python scripts/verify_phase4_single.py
+node scripts/sql-test/verify.mjs
+```
+
+The Phase 3 suite replaces a dedicated fixture catalog; never point it at a real business. The cross-account suite requires three distinct verified identities, tests both baker directions and compares target records/bytes after denial. It never administratively confirms users. The single-account Phase 4 script uses the existing ignored email-test fixture, sends no mail, and is explicitly limited. Missing accounts block those tests, not independent local implementation. Six migrations are now versioned; inspect dry-run/history before any future deployment. Do not reset the development project.
+
+Native setup commands elsewhere are historical alternatives; Android installation and iOS/native acceptance are currently deferred. Use the laptop browser commands above. Phase 5 is not authorized by this handoff.

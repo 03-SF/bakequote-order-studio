@@ -1,6 +1,6 @@
 """Development-only backend verification through Auth, PostgREST and Storage HTTP.
 No service role is used. Account credentials come only from process environment.
-Run against an isolated migrated project; creates one unverified signup fixture.
+Run against an isolated migrated project. Real registration/email are manual Flutter checks.
 """
 import argparse
 import base64
@@ -11,6 +11,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+from backend_setup import SetupError, load_live_config, require_accounts
 
 PNG = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6XcAAAAASUVORK5CYII=')
 
@@ -114,11 +115,10 @@ def run(config):
         check(code in (400, 401, 403), 'Other baker cannot upload business image')
     finally:
         baker_a[0].call('DELETE', '/storage/v1/object/business-images', {'prefixes': [image_path]})
-    # A unique throwaway signup exercises Auth registration. Verification is manual.
-    signup_email = 'bq-check-' + uuid.uuid4().hex + '@example.test'
-    code, signup = public.call('POST', '/auth/v1/signup', {'email': signup_email, 'password': uuid.uuid4().hex + '!Aa1', 'data': {'role': 'admin'}})
-    check(code in (200, 201) and signup and signup.get('access_token') is None, 'Registration requires email verification')
-    print('NOTE: one unverified development signup fixture created; remove via Auth dashboard after verification.')
+    # Do not send hosted signup to an invented example.test mailbox. A response
+    # for an existing address can also conceal enumeration, so real signup and
+    # delivered-email checks must be observed from Flutter with a fresh inbox.
+    print('MANUAL REQUIRED: fresh Flutter registration, delivered verification/resend and password recovery are not verified by this HTTP suite.')
     for api, _ in actors:
         code, _ = api.call('POST', '/auth/v1/logout?scope=local')
         check(code in (200, 204), 'Test session signed out')
@@ -127,11 +127,18 @@ def run(config):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='config/local.json')
+    parser.add_argument('--preflight-only', action='store_true', help='Validate inputs without making network requests')
     args = parser.parse_args()
     try:
-        with open(args.config, encoding='utf-8-sig') as handle:
-            config = json.load(handle)
+        config = load_live_config(args.config)
+        require_accounts(('CUSTOMER', 'BAKER_A', 'BAKER_B'))
+        if args.preflight_only:
+            print('Setup inputs present. Project identity and live behavior remain unverified; no requests made.')
+            return 0
         run(config)
+    except SetupError as error:
+        print('BLOCKED:', str(error), file=sys.stderr)
+        return 2
     except (OSError, ValueError, AssertionError, KeyError, urllib.error.URLError) as error:
         # Exception text from network operations may contain sensitive URLs.
         print('FAILED:', str(error) if isinstance(error, (ValueError, AssertionError, KeyError)) else type(error).__name__, file=sys.stderr)
