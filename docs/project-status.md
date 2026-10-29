@@ -1,5 +1,9 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Current all-phase audit continuation
+
+The live onboarding form previously preselected Customer; it now requires an explicit Customer/Baker choice and shows a validation message until selected. Existing identity records and the unresolved dual-role policy are unchanged. Focused authentication widgets: 4 passed; full Flutter suite: 71 passed; formatting and Flutter analysis passed; Android debug APK compiled without installation. These are local checks, not live first-time onboarding acceptance. The phase matrix now includes phases 1–4 and 3A as well as later-phase gaps. Conversation attachment uploads and account deletion remain incomplete; real Customer/Baker A/B acceptance is blocked by missing registered baker accounts and recent Auth rate limiting. Native acceptance remains deferred. No release approval is claimed.
+
 ## Approved lifecycle and account preparation (2026-10-29)
 
 The owner chose Confirmed → Baking → Ready → Delivered. Forward migration `20261029000800_original_production_lifecycle.sql` was dry-run inspected and applied to the linked development project without data reset; fourteen local/remote migration versions match. New transitions into Decorating are denied. Existing Decorating rows/history remain untouched, continue consuming capacity and may transition to Ready. Flutter domain and baker UI follow both paths.

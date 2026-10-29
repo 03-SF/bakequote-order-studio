@@ -4,9 +4,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bakequote_mobile/app/app.dart';
 import 'package:bakequote_mobile/features/auth/application/auth_controller.dart';
+import 'package:bakequote_mobile/features/auth/presentation/auth_pages.dart';
 import 'support/fake_auth_repository.dart';
 
 void main() {
+  testWidgets('Onboarding requires an explicit initial experience', (
+    tester,
+  ) async {
+    final repo = FakeAuthRepository();
+    final container = authContainer(repo);
+    addTearDown(container.dispose);
+    addTearDown(repo.events.close);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: IdentityPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Ayesha');
+    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue'));
+    await tester.pumpAndSettle();
+    expect(find.text('Choose Customer or Baker'), findsOneWidget);
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Baker').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Business name'), findsOneWidget);
+    expect(find.text('Choose Customer or Baker'), findsNothing);
+  });
   testWidgets(
     'Missing live configuration becomes an error rather than endless loading',
     (tester) async {

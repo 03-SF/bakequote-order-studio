@@ -9,6 +9,8 @@
 | Flutter lifecycle | Full suite 70 passed, including Baking/legacy controls | PASS, local |
 | Builds | Web release and Android debug APK built | PASS, compile only; no APK installation or native acceptance |
 | Existing Customer | Real password login shows confirmed email and Customer initial experience | PASS, limited; prior delivered email remains separate evidence |
+| Three-account cross-account runner | Locally protected credentials supplied; Customer normal verified session passed, Baker A session failed; runner stopped before Baker B and cross-account checks | BLOCKED; baker login/confirmation cause not established |
+| Individual baker Auth diagnostics | Baker A and Baker B each returned HTTP 400, `invalid_credentials`, “Invalid login credentials”; account existence and confirmation are not established by this response | BLOCKED; dashboard account status requires authorized inspection |
 | Chrome customer regression | First login attempt failed; a subsequent run passed seven checks: live login, onboarding, reload, request-list states, failed-save recovery, retry and logout | PASS on retry; the first failure's cause was not established |
 | Baker A/B and real requests | Protected local account file absent; no new positive multi-account acceptance executed | BLOCKED |
 | Secret API key | Retirement/rotation not verified | OPEN; owner action and sanitized confirmation required |

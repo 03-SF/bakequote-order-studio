@@ -310,7 +310,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
   final _form = GlobalKey<FormState>();
   late final TextEditingController _name;
   final _phone = TextEditingController(), _business = TextEditingController();
-  String _experience = 'customer';
+  String? _experience;
   @override
   void initState() {
     super.initState();
@@ -345,7 +345,10 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
             children: [
               DropdownButtonFormField<String>(
                 initialValue: _experience,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: InputDecoration(labelText: s.t('Experience')),
+                validator: (value) =>
+                    value == null ? s.t('Choose Customer or Baker') : null,
                 items: [
                   for (final r in ['customer', 'baker'])
                     DropdownMenuItem(
@@ -399,7 +402,7 @@ class _IdentityPageState extends ConsumerState<IdentityPage> {
                     : () {
                         if (_form.currentState!.validate()) {
                           controller.completeIdentity(
-                            _experience,
+                            _experience!,
                             _name.text,
                             _phone.text,
                             _business.text,
