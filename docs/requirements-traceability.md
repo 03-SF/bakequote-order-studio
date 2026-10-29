@@ -1,5 +1,7 @@
 # Requirements traceability
 
+Owner decision 54 restores the approved Confirmed → Baking → Ready → Delivered path. Migration 008 preserves existing Decorating rows/history, keeps their capacity allocated and allows Decorating → Ready. New transitions into Decorating are denied. Flutter domain/UI and modeled SQL regression tests cover both paths; real multi-account acceptance remains blocked. English-only and offline exclusion continue.
+
 Current scope and evidence are in [the Phase 5–10 completion matrix](phase-completion-matrix.md). English-only supersedes bilingual requirements; offline functionality is excluded. Existing draft/session persistence and connection-error recovery remain required, but do not establish or promise offline operation. Phases 5 and 6 are not accepted: positive multi-account hosted workflow, last-capacity race and lifecycle acceptance are outstanding.
 
 ## Phase 5 current evidence (2026-10-29)

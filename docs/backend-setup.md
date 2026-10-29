@@ -1,6 +1,6 @@
 # Supabase development setup
 
-Current Phase 5–6 acceptance setup: use three independently verified development identities and dedicated bakery/order fixtures through the secure terminal prompts in [the phase completion matrix](phase-completion-matrix.md#phase-56-live-acceptance-setup). The new runner never uses privileged keys and stops before production transitions while Decorating is unresolved. Account deletion and conversation attachments remain unavailable. Offline functionality is excluded; normal online recovery and session persistence remain.
+Current Phase 5–6 acceptance setup: use three independently verified development identities and a dedicated bakery through the Windows-protected local setup in [the phase completion matrix](phase-completion-matrix.md#phase-56-live-acceptance-setup). After owner setup, the assistant can create two disposable Pending requests and run the approved production lifecycle using normal user sessions. Account deletion and conversation attachments remain unavailable. Offline functionality is excluded; normal online recovery and session persistence remain.
 
 ## Current Phase 5 commands (2026-10-29)
 

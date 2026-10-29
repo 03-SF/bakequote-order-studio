@@ -1,6 +1,6 @@
 # Release readiness: remaining implementation and acceptance
 
-Current scope/evidence reconciliation is [the Phase 5–10 completion matrix](phase-completion-matrix.md). Offline functionality is explicitly excluded; references below to offline testing are historical and mean only network interruption and safe online recovery. The mandatory Decorating stage is an unresolved deviation from the original Confirmed → Baking → Ready → Delivered requirement; preserve existing data while the owner decides.
+Current scope/evidence reconciliation is [the Phase 5–10 completion matrix](phase-completion-matrix.md). Offline functionality is explicitly excluded; references below to offline testing are historical and mean only network interruption and safe online recovery. The owner approved Confirmed → Baking → Ready → Delivered; legacy Decorating orders remain intact and may advance to Ready.
 
 Updated 2026-10-29 after inspecting the actual working tree, migrations and development project. This report supersedes earlier statements that later phases were complete or that all remaining work was solely external acceptance. **Release is not approved.** The starting checkpoint was `ea5966f`; the subsequent local checkpoint preserves partial later-phase work and this audit. No Git remote or remote source backup is configured.
 

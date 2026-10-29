@@ -1,6 +1,6 @@
 # Implementation plan
 
-Current owner scope (2026-10-29): English-only; **offline functionality is excluded**. Preserve ordinary session persistence, unsent-input recovery, network-failure handling and idempotent online retries without claiming offline operation. The original Phase 5–10 labels and their actual implementation/acceptance status are reconciled in [the phase completion matrix](phase-completion-matrix.md). Mandatory Decorating is an unresolved deviation from the original lifecycle; do not silently change existing records or claim owner approval.
+Current owner scope (2026-10-29): English-only; **offline functionality is excluded**. Preserve ordinary session persistence, unsent-input recovery, network-failure handling and idempotent online retries without claiming offline operation. The original Phase 5–10 labels and their actual implementation/acceptance status are reconciled in [the phase completion matrix](phase-completion-matrix.md). The approved production path is Confirmed → Baking → Ready → Delivered; existing Decorating records may advance to Ready and remain preserved.
 
 ## Current scope: Phase 5 implementation delivered (2026-10-29)
 

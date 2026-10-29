@@ -1066,12 +1066,7 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
             onPressed: busy ? null : () => transition(OrderStatus.baking),
             child: const Text('Start baking'),
           ),
-        if (isBaker && baking)
-          FilledButton(
-            onPressed: busy ? null : () => transition(OrderStatus.decorating),
-            child: const Text('Start decorating'),
-          ),
-        if (isBaker && decorating)
+        if (isBaker && (baking || decorating))
           FilledButton(
             onPressed: busy ? null : () => transition(OrderStatus.ready),
             child: const Text('Mark ready'),

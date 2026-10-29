@@ -10,10 +10,23 @@ from unittest.mock import patch
 
 from backend_setup import SetupError, load_live_config, require_accounts
 import verify_phase6
+import verify_phase5
 from verify_backend import Api
 
 
 class BackendSetupTests(unittest.TestCase):
+    def test_fixture_plan_wont_overwrite_completed_or_malformed_pair(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'fixture.json'
+            self.assertEqual(verify_phase5.fixture_plan(path), {})
+            path.write_text(json.dumps({'order_one': 'first'}), encoding='utf-8')
+            self.assertEqual(verify_phase5.fixture_plan(path)['order_one'], 'first')
+            path.write_text(json.dumps({'order_one': 'first', 'order_two': 'second'}), encoding='utf-8')
+            with self.assertRaises(SetupError):
+                verify_phase5.fixture_plan(path)
+            path.write_text('{}', encoding='utf-8')
+            with self.assertRaises(SetupError):
+                verify_phase5.fixture_plan(path)
     def test_phase6_refuses_config_from_a_different_linked_project(self):
         with patch('verify_phase6.Path.read_text', return_value='dev-project'):
             verify_phase6.require_linked_project({'SUPABASE_URL': 'https://dev-project.supabase.co'})

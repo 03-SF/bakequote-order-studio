@@ -54,6 +54,7 @@ class OrderRules {
   bool get reservesCapacity => {
     OrderStatus.confirmed,
     OrderStatus.baking,
+    OrderStatus.decorating,
     OrderStatus.ready,
     OrderStatus.delivered,
   }.contains(status);
@@ -118,7 +119,7 @@ class OrderRules {
   OrderRules advance(OrderStatus next) {
     const transitions = {
       OrderStatus.confirmed: OrderStatus.baking,
-      OrderStatus.baking: OrderStatus.decorating,
+      OrderStatus.baking: OrderStatus.ready,
       OrderStatus.decorating: OrderStatus.ready,
       OrderStatus.ready: OrderStatus.delivered,
     };
@@ -136,7 +137,7 @@ class OrderRules {
   bool canBakerTransition(OrderStatus next) =>
       {
         OrderStatus.confirmed: OrderStatus.baking,
-        OrderStatus.baking: OrderStatus.decorating,
+        OrderStatus.baking: OrderStatus.ready,
         OrderStatus.decorating: OrderStatus.ready,
         OrderStatus.ready: OrderStatus.delivered,
       }[status] ==

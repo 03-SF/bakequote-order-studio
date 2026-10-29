@@ -1,5 +1,9 @@
 # Database and storage
 
+## Approved lifecycle and compatibility (migration 20261029000800)
+
+New baker production transitions are Confirmed → Baking → Ready → Delivered. A new Baking → Decorating transition is rejected. Existing Decorating orders, snapshots and events are not rewritten or removed; their existing capacity allocation remains consuming and the owner may advance them to Ready, then Delivered. Transition authorization, expected-version checks, operation-ID/input matching and append-only events remain enforced. The new migration only replaces the transition function; it does not change table data or remove the legacy status constraint.
+
 Current deployment: the seven prior migration versions match the linked
 development project (2026-10-29). The Phase 5 progression migration is local
 and parsed but not yet deployed. Limited live checks pass; full

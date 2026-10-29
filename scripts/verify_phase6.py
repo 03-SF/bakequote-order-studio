@@ -2,7 +2,7 @@
 
 This changes quotes, agreements, and order statuses, and occupies a capacity
 slot in a dedicated development bakery. It does not change bakery settings or
-delete test data. It stops at Baking while the lifecycle policy is unresolved.
+delete test data. The winning test order is advanced through Delivered.
 Credentials and UUIDs are read from process environment; nothing is logged.
 """
 import argparse
@@ -168,8 +168,19 @@ def run(config, ids):
             check(read(fresh, ids[winner]) == after[winner], 'Confirmed order persists in a fresh customer session')
         finally:
             fresh.call('POST', '/auth/v1/logout?scope=local')
-        print('BLOCKED: Production transition beyond Confirmed awaits the unresolved Decorating decision. No order IDs or private content printed.')
-        return False
+        current_order = after[winner]
+        for next_status in ('baking', 'ready', 'delivered'):
+            transition = {'p_order_id': ids[winner], 'p_expected_version': current_order['version'], 'p_next_status': next_status, 'p_operation_id': str(uuid.uuid4())}
+            updated = call(baker, 'transition_order', transition)
+            check(updated['status'] == next_status, 'Owner advances to ' + next_status)
+            duplicate = call(baker, 'transition_order', transition)
+            check(duplicate['id'] == ids[winner] and duplicate['status'] == next_status, 'Exact transition retry remains idempotent')
+            current_order = read(customer, ids[winner])
+            check(current_order['status'] == next_status and current_order['snapshot'] == after[winner]['snapshot'], 'Customer sees transition with original snapshot intact')
+        status, events = customer.call('GET', '/rest/v1/order_events?order_id=eq.' + ids[winner] + '&select=kind')
+        check(status == 200 and {'confirmed', 'status_baking', 'status_ready', 'status_delivered'}.issubset({e['kind'] for e in events}), 'Customer can read production event history')
+        print('Dedicated test orders retained: one Delivered and one Pending. IDs and private content withheld.')
+        return True
     finally:
         for api, _ in actors:
             api.call('POST', '/auth/v1/logout?scope=local')

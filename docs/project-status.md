@@ -1,5 +1,11 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Approved lifecycle and account preparation (2026-10-29)
+
+The owner chose Confirmed → Baking → Ready → Delivered. Forward migration `20261029000800_original_production_lifecycle.sql` was dry-run inspected and applied to the linked development project without data reset; fourteen local/remote migration versions match. New transitions into Decorating are denied. Existing Decorating rows/history remain untouched, continue consuming capacity and may transition to Ready. Flutter domain and baker UI follow both paths.
+
+Local modeled PostgreSQL: **141 checks passed**, including original transitions, legacy capacity/history and idempotency. The final full Flutter suite passed **70 tests**, including the lifecycle widget test. Formatting, analysis, SQL parsing and 16 Python setup tests passed. Web and Android debug builds succeeded; no APK was installed. The PowerShell account helper parsed successfully. The existing customer was confirmed through normal login and Customer onboarding; previous email delivery is separate evidence. Dedicated Baker A/B credentials are not yet available, so no positive Phase 5–6 multi-account acceptance has run. Rotation of the exposed Supabase secret key is not yet verified. See [phase completion and secure setup](phase-completion-matrix.md). Android/iOS device acceptance remains deferred; do not start another feature phase.
+
 ## Scope reconciliation and core acceptance (2026-10-29)
 
 The authoritative [Phase 5–10 completion matrix](phase-completion-matrix.md) distinguishes foundations, missing/disabled work, actual live evidence and external blockers. English-only; offline functionality excluded. Preserve session persistence, unsent-input recovery and safe retries. Mandatory Decorating was introduced after the original reference lifecycle and remains an unresolved owner decision; existing data is preserved.

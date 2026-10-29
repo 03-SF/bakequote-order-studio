@@ -1,5 +1,21 @@
 # Live Supabase integration verification
 
+## Approved lifecycle and account preparation (2026-10-29)
+
+| Scenario | Actual result | Status |
+| --- | --- | --- |
+| Lifecycle decision and migration | Owner selected Confirmed → Baking → Ready → Delivered; migration 008 applied without reset; fourteen local/remote versions match | PASS, deployment only |
+| Original and legacy lifecycle | 141 modeled PostgreSQL checks pass; Baking → Ready, legacy Decorating → Ready, capacity and history tested | PASS, modeled only |
+| Flutter lifecycle | Full suite 70 passed, including Baking/legacy controls | PASS, local |
+| Builds | Web release and Android debug APK built | PASS, compile only; no APK installation or native acceptance |
+| Existing Customer | Real password login shows confirmed email and Customer initial experience | PASS, limited; prior delivered email remains separate evidence |
+| Chrome customer regression | First login attempt failed; a subsequent run passed seven checks: live login, onboarding, reload, request-list states, failed-save recovery, retry and logout | PASS on retry; the first failure's cause was not established |
+| Baker A/B and real requests | Protected local account file absent; no new positive multi-account acceptance executed | BLOCKED |
+| Secret API key | Retirement/rotation not verified | OPEN; owner action and sanitized confirmation required |
+| Native testing | No emulator installation or device acceptance attempted | DEFERRED |
+
+The `scripts/acceptance_accounts.ps1` helper stores test account passwords as Windows-user-protected `PSCredential` values in ignored local XML. Its `Preflight` validates input presence only; it does not prove login or email delivery. The Phase 5 runner can create two retained disposable Pending orders after the owner prepares the dedicated bakery. The Phase 6 runner now executes the approved lifecycle on the winning test order. See [exact setup and privacy details](phase-completion-matrix.md#phase-56-live-acceptance-setup).
+
 ## Phase 5–6 acceptance preparation (2026-10-29)
 
 | Scenario | Actual result | Status |

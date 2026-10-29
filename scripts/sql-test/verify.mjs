@@ -340,11 +340,15 @@ await as('authenticated',a,async()=>{
  const baking=await scalar("SELECT to_jsonb(public.transition_order($1,5,'baking',$2))",[order,transitionOp]);
  check(baking.status==='baking','owner advances confirmed order');
  await denied(()=>db.query("SELECT public.transition_order($1,5,'decorating',$2)",[order,transitionOp]),'transition retry with changed action rejected','40001');
- await db.query("SELECT public.transition_order($1,6,'decorating',gen_random_uuid())",[order]);
+ await denied(()=>db.query("SELECT public.transition_order($1,6,'decorating',gen_random_uuid())",[order]),'new transitions into Decorating are rejected','23514');
+ const ready=await scalar("SELECT to_jsonb(public.transition_order($1,6,'ready',gen_random_uuid()))",[order]);
+ check(ready.status==='ready','baking advances directly to ready');
+ const delivered=await scalar("SELECT to_jsonb(public.transition_order($1,7,'delivered',gen_random_uuid()))",[order]);
+ check(delivered.status==='delivered','ready advances to delivered');
 });
-check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===1,'decorating order still consumes capacity');
+check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===1,'delivered order still consumes capacity');
 await as('authenticated',b,()=>denied(()=>db.query("SELECT public.transition_order($1,5,'baking',$2)",[order,transitionOp]),'unrelated baker cannot retrieve order through operation replay','42501'));
-check(await scalar('SELECT status FROM public.order_requests WHERE id=$1',[order])==='decorating','denied operation leaves order unchanged');
+check(await scalar('SELECT status FROM public.order_requests WHERE id=$1',[order])==='delivered','denied operation leaves order unchanged');
 const manualOp='a0000000-0000-4000-8000-000000000003';
 let manual;
 await as('authenticated',a,async()=>{
@@ -354,6 +358,17 @@ await as('authenticated',a,async()=>{
  await denied(()=>db.query("SELECT public.add_manual_order($1,'Changed','03000000000','{}',10000,$2,$3,false)",[businessA,day,manualOp]),'manual retry with changed input rejected','40001');
 });
 await as('authenticated',b,()=>denied(()=>db.query("SELECT public.add_manual_order($1,'Fixture','03000000000','{}',10000,$2,$3,false)",[businessB,day,manualOp]),'other baker cannot replay manual order operation','40001'));
+// Isolated fixture representing an order that was already in the legacy state.
+await db.query("UPDATE public.order_requests SET status='decorating' WHERE id=$1",[manual.id]);
+await db.query("UPDATE public.capacity_allocations SET status='decorating' WHERE order_id=$1",[manual.id]);
+await db.query("INSERT INTO public.order_events(order_id,kind,actor_id) VALUES($1,'legacy_decorating',$2)",[manual.id,a]);
+check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===2,'legacy Decorating continues to consume capacity');
+const legacyEvents=await scalar('SELECT count(*)::int FROM public.order_events WHERE order_id=$1',[manual.id]);
+await as('authenticated',a,async()=>{
+ const legacy=await scalar("SELECT to_jsonb(public.transition_order($1,1,'ready',gen_random_uuid()))",[manual.id]);
+ check(legacy.status==='ready','legacy Decorating advances to Ready');
+});
+check(await scalar('SELECT count(*)::int FROM public.order_events WHERE order_id=$1',[manual.id])===legacyEvents+1,'legacy history is preserved and a new event is added');
 await as('authenticated',c,()=>denied(()=>db.query("SELECT public.request_account_deletion('DELETE')"),'unfinished account deletion unavailable','42501'));
 console.log(`${passed} local PostgreSQL runtime checks passed. Supabase services remain unverified.`);
 await db.close();

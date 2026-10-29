@@ -52,6 +52,7 @@ config/local.json
 /android/.kotlin/
 __pycache__/
 config/*.local.json
+config/*.local.xml
 
 /scripts/sql-test/node_modules/
 /release-candidate-report.json

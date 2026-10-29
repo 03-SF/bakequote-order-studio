@@ -1,6 +1,6 @@
 # Non-functional requirements register
 
-Current owner scope: **offline functionality is excluded**. Retain connection-failure feedback, session and recoverable-input persistence, and protected/idempotent online retry; do not infer an offline browsing, editing, queue or synchronization requirement. Historical offline-feature statements below are superseded. The [phase completion matrix](phase-completion-matrix.md) records actual acceptance and unresolved lifecycle policy.
+Current owner scope: **offline functionality is excluded**. Retain connection-failure feedback, session and recoverable-input persistence, and protected/idempotent online retry; do not infer an offline browsing, editing, queue or synchronization requirement. Historical offline-feature statements below are superseded. The [phase completion matrix](phase-completion-matrix.md) records actual acceptance and the approved lifecycle/legacy compatibility path.
 
 ## Current Phase 5 evidence overlay (2026-10-29)
 

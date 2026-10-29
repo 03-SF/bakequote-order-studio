@@ -58,6 +58,11 @@ def run():
             enter('Password', creds['password'])
             with page.expect_response(lambda r: '/auth/v1/token' in r.url) as request:
                 page.get_by_role('button', name='Sign in', exact=True).click()
+            if request.value.status != 200:
+                submitted = request.value.request.post_data_json or {}
+                print('Sanitized login diagnostic: HTTP', request.value.status,
+                      'email matched:', submitted.get('email') == creds['email'],
+                      'password matched:', submitted.get('password') == creds['password'], flush=True)
             assert request.value.status == 200, 'Live login rejected'
             page.wait_for_url(lambda u: '/auth/onboarding' in str(u) or '/live/customer/' in str(u), timeout=60000)
             print('PASS: Chrome password login received a real Auth session', flush=True)

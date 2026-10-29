@@ -7,11 +7,23 @@ import argparse
 import os
 import sys
 import uuid
+import json
+from pathlib import Path
 from backend_setup import load_live_config, require_accounts, SetupError
 from verify_backend import Api, PNG, check
 
 
-def run(config):
+def fixture_plan(path):
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding='utf-8-sig'))
+    if not isinstance(data, dict) or not data.get('order_one') or data.get('order_two'):
+        raise SetupError('Fixture file is not an empty first-order record; keep it or remove it explicitly before preparing a new pair.')
+    return data
+
+
+def run(config, fixture_path=None):
+    fixture = fixture_plan(fixture_path) if fixture_path else {}
     public = Api(config['SUPABASE_URL'], config['SUPABASE_PUBLISHABLE_KEY'])
     actors = []
     try:
@@ -37,21 +49,18 @@ def run(config):
         product = menu[0]
         catalog = rpc(customer, 'request_catalog', {'p_business_id': business['id'], 'p_product_id': product['id']})
         calendar = rpc(customer, 'bakery_availability', {'p_code': business['code'], 'p_days': 62})
-        dates = [d['date'] for d in calendar['days'] if d['state'] == 'available']
+        dates = [d['date'] for d in calendar['days'] if d['state'] == 'available' and d['date'] > calendar['today']]
         if not dates:
-            raise SetupError('Baker A needs a configured available date within 62 days.')
-        draft = rpc(customer, 'open_request_draft', {'p_business_id': business['id']})
-        if draft['input']:
-            raise SetupError('Existing unsent draft found. Finish it first; the runner will not overwrite it.')
+            raise SetupError('Baker A needs a configured available future date within 62 days.')
+        if fixture and (fixture.get('business_id') != business['id'] or fixture.get('service_date') != dates[0] or fixture.get('project_url') != config['SUPABASE_URL']):
+            raise SetupError('The second fixture must use the same project, bakery and available service date as the first.')
+        if fixture_path:
+            settings = rpc(baker, 'owner_availability', {'p_business_id': business['id']})
+            if settings.get('daily_capacity') != 1:
+                raise SetupError('Set daily capacity to 1 on the dedicated test bakery before creating the two acceptance requests.')
         delivery = not catalog['pickup']
         if delivery and not catalog['zones']:
             raise SetupError('The test bakery needs pickup or an active delivery zone.')
-        path = uid + '/' + draft['id'] + '/' + str(uuid.uuid4()) + '.png'
-        rpc(customer, 'register_request_upload', {'p_draft_id': draft['id'], 'p_path': path})
-        status, _ = customer.call('POST', '/storage/v1/object/order-references/' + path, PNG, 'image/png')
-        check(status in (200, 201), 'Customer uploads registered private reference')
-        status, _ = baker.call('GET', '/storage/v1/object/authenticated/order-references/' + path)
-        check(status in (400, 401, 403, 404), 'Baker cannot read unsent draft reference')
         p = catalog['product']
         if not p['variants']:
             raise SetupError('The dedicated product needs an active size/pack variant.')
@@ -62,6 +71,15 @@ def run(config):
         quantity = max(p['minimum_quantity'], (minimum + price - 1) // price if price else 1)
         if quantity > 10000:
             raise SetupError('The selected test variant cannot meet the minimum within the quantity bound.')
+        draft = rpc(customer, 'open_request_draft', {'p_business_id': business['id']})
+        if draft['input']:
+            raise SetupError('Existing unsent draft found. Finish it first; the runner will not overwrite it.')
+        path = uid + '/' + draft['id'] + '/' + str(uuid.uuid4()) + '.png'
+        rpc(customer, 'register_request_upload', {'p_draft_id': draft['id'], 'p_path': path})
+        status, _ = customer.call('POST', '/storage/v1/object/order-references/' + path, PNG, 'image/png')
+        check(status in (200, 201), 'Customer uploads registered private reference')
+        status, _ = baker.call('GET', '/storage/v1/object/authenticated/order-references/' + path)
+        check(status in (400, 401, 403, 404), 'Baker cannot read unsent draft reference')
         value = {'product_id': product['id'], 'variant_id': p['variants'][0]['id'], 'option_ids': [],
                  'quantity': quantity, 'service_date': dates[0],
                  'fulfilment': 'delivery' if delivery else 'pickup',
@@ -72,6 +90,13 @@ def run(config):
         saved = rpc(customer, 'save_request_draft', {'p_id': draft['id'], 'p_revision': draft['revision'], 'p_input': value})
         reviewed = rpc(customer, 'review_request', {'p_id': draft['id'], 'p_revision': saved['revision']})
         order = rpc(customer, 'submit_request', {'p_id': draft['id'], 'p_review_token': reviewed['review_token']})
+        if fixture_path:
+            if fixture:
+                fixture['order_two'] = order
+            else:
+                fixture = {'order_one': order, 'business_id': business['id'], 'service_date': dates[0], 'project_url': config['SUPABASE_URL']}
+            fixture_path.write_text(json.dumps(fixture, indent=2) + '\n', encoding='utf-8')
+            print('Saved test fixture identifier locally; no order IDs printed.')
         check(rpc(customer, 'submit_request', {'p_id': draft['id'], 'p_review_token': reviewed['review_token']}) == order, 'Exact retry returns same persisted order')
         query = '/rest/v1/order_requests?id=eq.' + order
         status, original = customer.call('GET', query)
@@ -114,12 +139,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', default='config/local.json')
     parser.add_argument('--preflight-only', action='store_true')
+    parser.add_argument('--record-fixture', action='store_true', help='Record up to two dedicated requests in ignored local fixture configuration')
     args = parser.parse_args()
     try:
         config = load_live_config(args.config)
         require_accounts(('CUSTOMER', 'BAKER_A', 'BAKER_B'))
         if not args.preflight_only:
-            run(config)
+            run(config, Path('config/phase6-fixtures.local.json') if args.record_fixture else None)
     except SetupError as error:
         print('BLOCKED:', str(error))
         sys.exit(1)

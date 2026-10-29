@@ -1,6 +1,6 @@
 # BakeQuote architecture contract
 
-Current reconciliation: English-only, offline functionality excluded. Session restoration and safe recovery of unsent user input remain supported without promising offline workflows. Phase 5–10 implementation and live acceptance are not complete; [the completion matrix](phase-completion-matrix.md) supersedes older phase-status statements below. Production lifecycle currently includes an unapproved mandatory Decorating deviation; preserve existing data until an owner decision and tested migration. Order-reference access is participant-gated, while conversation uploads and account deletion remain disabled.
+Current reconciliation: English-only, offline functionality excluded. Session restoration and safe recovery of unsent user input remain supported without promising offline workflows. Phase 5–10 implementation and live acceptance are not complete; [the completion matrix](phase-completion-matrix.md) supersedes older phase-status statements below. The owner approved Confirmed → Baking → Ready → Delivered; existing Decorating orders remain readable/capacity-consuming and may advance to Ready. Order-reference access is participant-gated, while conversation uploads and account deletion remain disabled.
 
 ## Phase 5 extension (2026-10-29)
 

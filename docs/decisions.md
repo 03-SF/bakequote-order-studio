@@ -1,5 +1,9 @@
 # Decisions and open questions
 
+## Owner lifecycle decision (2026-10-29)
+
+54. The owner chose the original approved path Confirmed → Baking → Ready → Delivered for future orders. New transitions into Decorating are rejected. Existing Decorating rows, snapshots and event history are preserved; they remain capacity-consuming and may advance to Ready, then Delivered. No historical data is rewritten. The forward-only migration `20261029000800_original_production_lifecycle.sql` implements this policy. Native and live multi-account acceptance remain separate from this decision.
+
 ## Scope reconciliation (2026-10-29)
 
 50. The current owner instruction supersedes bilingual and offline-functionality scope: BakeQuote is English-only and offline functionality is excluded. Preserve normal online error handling, session/draft recovery and safe idempotent retries. An unsent local draft is not an offline submission feature.

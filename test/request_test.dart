@@ -55,6 +55,20 @@ class RequestAuthStub extends AuthController {
   }
 }
 
+class BakerAuthStub extends AuthController {
+  @override
+  AuthViewState build() => const AuthViewState(
+    phase: AuthPhase.signedIn,
+    identity: Identity('baker', 'baker@example.test', verified: true),
+    profile: AccountProfile(
+      id: 'baker',
+      name: 'Baker',
+      phone: '',
+      experience: 'baker',
+    ),
+  );
+}
+
 class FakeRequests implements RequestRepository {
   RequestDraft remote = const RequestDraft('draft', 'bakery', 0, input);
   DraftCache? local;
@@ -158,6 +172,44 @@ ProviderContainer harness(FakeRequests repo) => ProviderContainer(
   ],
 );
 void main() {
+  testWidgets('Baker can mark Baking and legacy Decorating orders Ready', (
+    tester,
+  ) async {
+    for (final status in ['baking', 'decorating']) {
+      final record = RequestRecord(
+        'order',
+        'BQ-1',
+        status,
+        '2026-10-29',
+        'Bakery',
+        'Cake',
+        input,
+        '1 kg',
+        const [],
+        estimate,
+        'Asia/Karachi',
+        '',
+        '',
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          key: ValueKey(status),
+          overrides: [
+            authControllerProvider.overrideWith(BakerAuthStub.new),
+            orderQuotesProvider.overrideWith((ref, id) async => []),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: OrderActionPanel(orderId: 'order', record: record),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(FilledButton, 'Mark ready'), findsOneWidget);
+      expect(find.text('Start decorating'), findsNothing);
+    }
+  });
   testWidgets('Agreement remains disabled until the current quote is visible', (
     tester,
   ) async {

@@ -74,7 +74,6 @@ void main() {
     expect(
       c
           .advance(OrderStatus.baking)
-          .advance(OrderStatus.decorating)
           .advance(OrderStatus.ready)
           .advance(OrderStatus.delivered)
           .status,
@@ -90,6 +89,24 @@ void main() {
     expect(() => r.advance(OrderStatus.baking), throwsA(isA<RuleViolation>()));
     expect(r.resolveCancellation(approve: true).status, OrderStatus.cancelled);
     expect(r.resolveCancellation(approve: false).status, OrderStatus.confirmed);
+  });
+  test('Legacy Decorating remains booked and can advance to Ready', () {
+    final legacy = OrderRules(
+      quotes: pending().quotes,
+      status: OrderStatus.decorating,
+    );
+    expect(legacy.reservesCapacity, isTrue);
+    expect(legacy.canBakerTransition(OrderStatus.ready), isTrue);
+    expect(legacy.advance(OrderStatus.ready).status, OrderStatus.ready);
+    final baking = OrderRules(
+      quotes: pending().quotes,
+      status: OrderStatus.baking,
+    );
+    expect(
+      () => baking.advance(OrderStatus.decorating),
+      throwsA(isA<RuleViolation>()),
+    );
+    expect(baking.advance(OrderStatus.ready).status, OrderStatus.ready);
   });
   test('Only owning customer reviews a delivered app order', () {
     final delivered = OrderRules(
