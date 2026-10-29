@@ -1,0 +1,69 @@
+# BakeQuote phases 5–10: scope and acceptance matrix
+
+Updated 2026-10-29 from clean starting checkpoint `f057a16`, current source, the original requirements, subsequent owner instructions and existing verification evidence. Phase numbers below follow the original implementation plan; earlier status notes sometimes called Phase 6 progression “Phase 5” and Phase 8 communication “Phase 7”. Those notes describe code, not acceptance completion. **None of phases 5–10 is accepted as complete.**
+
+## Scope reconciliation
+
+- **English only:** the explicit later owner instruction supersedes original English/Urdu and RTL requirements. Normal direction-aware APIs, accessibility and larger text remain useful.
+- **Offline functionality is excluded** by the current owner instruction. Existing local unsent-draft/session persistence and image-cleanup bookkeeping are recovery mechanisms, not a commitment to browse, edit, queue or submit offline. Preserve safe network-error handling, session restoration, unsent input and idempotent explicit retries; authoritative operations require an online response. Historic offline requirements/benchmarks are superseded.
+- **Lifecycle:** the original requirements and the reference application's `machine.ts` both specify Confirmed → Baking → Ready → Delivered. The domain rules at `ea5966f` match that sequence. Mandatory Decorating first appeared in the later work saved by `f057a16`, with no owner approval found in the project decisions. The user specifically requested investigation without silently changing the lifecycle or removing existing data. Treat it as an **unresolved deviation**, not an approved policy. Ask whether to use the original sequence, retain Decorating as mandatory, or allow it optionally; preserve all existing records and capacity accounting until a forward-compatible migration is designed and tested.
+- **Billing and backup:** the original requirements describe *applicable* plans/export/restore and prohibit invented commercial terms; the later supplied Phase 9 scope explicitly names billing recovery, encrypted backup/restore and account deletion. These are desired outcomes, not evidence of implemented providers or approval of a particular entitlement, price, retention period, encryption format, archive contents, recovery promise, RPO or RTO. Apple/Google sandbox testing was requested in the later release scope, but product IDs, provider account access and plan rules are still missing. Source backup, database recovery and user export are separate concerns.
+- **Dual-role and membership:** same-identity customer/baker enrollment is unresolved. Preview role switches never grant real access.
+- Android installation/native-device acceptance, iOS build/device testing, native callbacks/storage/permissions and push acceptance remain deferred by the owner. Flutter Web is a laptop test host, not a change in Android/iOS product direction.
+
+## Completion matrix
+
+| Phase and required outcome | Implemented foundation | Partial, disabled or missing implementation | Actual live acceptance evidence | External blockers and remaining tasks |
+| --- | --- | --- | --- | --- |
+| **5 — customer requests** | Four-step product/customization, date/fulfilment/contact/design builder; account/bakery draft; server-reviewed integer-paisa estimate; immutable Pending snapshot; atomic submission/retry; customer/baker list/detail; private order-reference policy. | Real two-party request/image journey and uncertain response on hosted service not accepted. Browser/native image-picker and restart paths are not fully accepted. | This continuation: 22 limited customer/anonymous HTTP checks and customer Chrome empty-list/reload passed; no positive real request, owning-baker view or cross-account reference read. Thirteen migrations matched remotely. | Verified Customer/Baker A/B, dedicated active bakery/product and separate sessions; submit and reopen a real test request/image; direct denial with unchanged target; browser reload and retry. |
+| **6 — quotation and lifecycle** | Versioned quote records, agreement, locked confirmation/capacity, operation IDs, events, status actions and server-side bakery-timezone due times. UI loads current quote history before agreement. | Mandatory Decorating conflicts with original sequence and has no recorded approval. Rescheduling/cancellation UX and true race/lost-response retry acceptance remain incomplete. Operation IDs for some flows are not persisted through uncertain process restart. | No positive hosted customer/baker quote/confirmation workflow or last-slot race has been demonstrated. Prior local tests covered agreement-before-confirmation, retry binding and allocation; this continuation adds revision/invalidation/stale quote checks in modeled SQL only. | Decide lifecycle without deleting existing status data; run two independent authenticated requests against a dedicated capacity-one bakery, verify exactly one confirmation, retries/stale operations, quote revision/agreement, persistence and approved end-to-end transition. |
+| **7 — baker operations** | Today view, private contacts/notes, manual order and advance foundations; backend reschedule/cancellation resolution and ownership policies. | Search/filter/calendar integration, production-ready retry after uncertain restart, complete balance and cancellation/reschedule experience, and dedicated ownership acceptance are partial or unverified. Manual order must never create accounts/conversations. | No positive hosted baker-operations acceptance with dedicated verified baker. | Dedicated fixture baker(s); cross-account backend tests and UI workflow, stale operations, non-destructive retries and historical order verification. |
+| **8 — communication and feedback** | Message/notification/review/report/block schemas and UI foundations; online event refresh/cursor. | Conversation-image uploads are **disabled** by restrictive policy; upload ownership, cleanup and content-bound retries remain unfinished. Realtime/notification delivery, cross-device behavior and moderation/review acceptance are incomplete. | No real two-party message, private conversation attachment, notification, report/block or review acceptance. | Implement/test member-scoped uploads and safe cleanup before enabling; real participant/unrelated-user Storage and RLS tests, provider/device notification and UI acceptance. |
+| **9 — account, billing and recovery** | Server-owned transaction/entitlement and deletion-job tables; on-screen account snapshot; account panel. | Purchase adapters, provider verification/callbacks/reconciliation and billing recovery are missing. Snapshot is not encrypted backup or restore. Deletion is **disabled**: verified reauthentication, worker, Auth/media cleanup, retry and retention policy are not implemented. | No store sandbox, encrypted recovery/restore or deletion-worker acceptance. | Owner-approved product/plan rules, Apple/Google sandbox configuration; archive scope/key recovery and retention decisions; implement and rehearse the missing provider/recovery/deletion services. Offline features are excluded. |
+| **10 — release preparation** | Local formatting/analysis/test/SQL-parse/config-safety runner and a NOT_APPROVED report; Android debug compile previously succeeded. | Scenario-level AT01–AT24 acceptance evidence, performance measurements, recovery drill, security review and actual Android/iOS device matrix are missing. | This continuation: 135 modeled SQL checks, 15 Python setup tests, Web build and seven limited customer Chrome checks. Prior: 68 Flutter tests and local release gate; no complete hosted/device acceptance. | Finish actual Phase 5–9 implementations and verification, measure approved targets, verify operations/restore and later perform owner-authorized device acceptance. Do not publish or claim release readiness. |
+
+## Credential incident
+
+The previously exposed value was a Supabase **secret API key** (the `sb_secret_` type), an elevated server credential that bypasses RLS. It was supplied in chat; its value is not reproduced here. Its rotation/revocation is **unconfirmed**, and the prior local credential scan cannot prove rotation. Flutter uses the publishable client key; no privileged key belongs in Flutter, Git or chat.
+
+If not already done, in the confirmed **development** project: open **Settings → API Keys**, create a replacement secret key if a server component actually requires one, update each authorized server-side secret store, verify those components use the replacement, then delete the exposed secret key after confirming dependencies. Do not delete keys blindly if their consumers are unknown. If no component uses it, identify the exposed key privately in the Dashboard and retire it. Verify the old key is absent/revoked using the Dashboard or an appropriately authorized operator, without sending either key to chat; report only “rotated/revoked” or “not yet/unsure.” This procedure follows [Supabase's compromised-key guidance](https://supabase.com/docs/guides/getting-started/api-keys#rotate-a-leaked-or-compromised-key). A new secret key does not itself retire an old key; deletion is a distinct action. Do not assume a database-password, management-token or JWT-signing-key rotation occurred.
+
+## Phase 5–6 live acceptance setup
+
+1. Use the confirmed hosted **development** project and keep email confirmation enabled. Prepare three distinct accounts with accessible inboxes: one Customer and two Bakers. Verify them through normal email confirmation and complete initial onboarding. The provider's default sender may only deliver to permitted organization-member addresses; use authorized SMTP for other test inboxes if needed. Administrative confirmation is not evidence of delivered verification email.
+2. With Baker A, use a dedicated disposable activated test bakery with an active product, configured timezone/fulfilment and **daily capacity 1**. Choose a future service date with no bookings and availability `available`. Existing business data is not reset or automatically modified.
+3. Using the Customer account, create **two separate Pending test requests** for that same bakery and future date. Include at least one private reference image on the first request. Pending requests do not reserve capacity. Preserve both requests as test fixtures; do not use real customer information.
+4. Open PowerShell in `mobile` and enter credentials through prompts. They exist only in that terminal process; do not paste passwords or tokens into chat:
+
+```powershell
+$testRoles = @('CUSTOMER','BAKER_A','BAKER_B')
+try {
+    foreach ($testRole in $testRoles) {
+        [Environment]::SetEnvironmentVariable("BQ_TEST_${testRole}_EMAIL", (Read-Host "$testRole email"), 'Process')
+        $testSecret = Read-Host "$testRole password" -AsSecureString
+        $testCredential = [System.Management.Automation.PSCredential]::new('test', $testSecret)
+        [Environment]::SetEnvironmentVariable("BQ_TEST_${testRole}_PASSWORD", $testCredential.GetNetworkCredential().Password, 'Process')
+    }
+    python scripts/verify_cross_account.py --preflight-only
+    python scripts/verify_phase6.py --list-candidates
+    $env:BQ_PHASE6_ORDER_ONE = Read-Host 'First dedicated Pending request UUID'
+    $env:BQ_PHASE6_ORDER_TWO = Read-Host 'Second dedicated Pending request UUID'
+    python scripts/verify_phase6.py --preflight-only
+    # Only after verifying the listed orders and bakery are disposable development fixtures:
+    python scripts/verify_phase6.py --confirm-dedicated-fixtures
+} finally {
+    foreach ($testRole in $testRoles) {
+        [Environment]::SetEnvironmentVariable("BQ_TEST_${testRole}_EMAIL", $null, 'Process')
+        [Environment]::SetEnvironmentVariable("BQ_TEST_${testRole}_PASSWORD", $null, 'Process')
+    }
+    Remove-Item Env:BQ_PHASE6_ORDER_ONE, Env:BQ_PHASE6_ORDER_TWO -ErrorAction SilentlyContinue
+    $testSecret = $null
+    $testCredential = $null
+}
+```
+
+The Phase 6 runner requires the configured URL to match the CLI-linked hosted project, and validates identities/ownership, one-slot availability and test-fixture state before modifying orders. The operator must still confirm that the linked project is development; a matching project reference alone does not prove environment classification. It checks owner/customer visibility, unrelated baker denial and unchanged bytes/rows, quote revision and invalidation, stale agreement, two synchronized normal-user HTTP confirmation requests, exact retry/different-input rejection and persistence in a fresh session. The client barrier starts requests together; it does not independently prove overlap inside the database, so capture database-side timing/lock evidence when assessing true concurrency. It deliberately leaves one confirmed and one Pending development request and **stops before production transitions** while Decorating is unresolved; it returns BLOCKED/nonzero for incomplete lifecycle acceptance. A successful HTTP runner is not Chrome visual acceptance. Run the existing Phase 5 runner separately for fresh submission/idempotency, then perform the builder/quote review in Chrome. No service-role credential is used to prove user permissions.
+
+## Decision and acceptance status
+
+At this checkpoint **Phase 5 does not meet acceptance criteria** because positive real customer-to-baker request/reference and cross-account tests are missing. **Phase 6 does not meet acceptance criteria** because the required real quote/agreement/confirmation/race/lifecycle flow has not run, and mandatory Decorating is unresolved. The next specific milestone is the secure three-account, dedicated-bakery Phase 5–6 laptop acceptance run, alongside an owner lifecycle decision. Do not publish or infer release readiness.

@@ -1,5 +1,7 @@
 # Supabase development setup
 
+Current Phase 5–6 acceptance setup: use three independently verified development identities and dedicated bakery/order fixtures through the secure terminal prompts in [the phase completion matrix](phase-completion-matrix.md#phase-56-live-acceptance-setup). The new runner never uses privileged keys and stops before production transitions while Decorating is unresolved. Account deletion and conversation attachments remain unavailable. Offline functionality is excluded; normal online recovery and session persistence remain.
+
 ## Current Phase 5 commands (2026-10-29)
 
 Seven migrations are applied to the linked development project. Do not reset it. Positive multi-account request acceptance remains blocked by verified baker fixtures, not missing client configuration. All older missing-project observations below are historical.

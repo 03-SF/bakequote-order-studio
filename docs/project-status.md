@@ -1,5 +1,13 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Scope reconciliation and core acceptance (2026-10-29)
+
+The authoritative [Phase 5–10 completion matrix](phase-completion-matrix.md) distinguishes foundations, missing/disabled work, actual live evidence and external blockers. English-only; offline functionality excluded. Preserve session persistence, unsent-input recovery and safe retries. Mandatory Decorating was introduced after the original reference lifecycle and remains an unresolved owner decision; existing data is preserved.
+
+Starting checkpoint `f057a16` was clean. The linked development project still matches thirteen local migration versions. This continuation added five meaningful modeled PostgreSQL quote revision/history/agreement checks: **135 passed**. The setup suite has **15 passing** tests including the new Phase 6 preflight, credential-safe error parsing and linked-project safety checks. Analysis and formatting passed; the Web release build succeeded, and seven Chrome checks passed with the existing customer: login, protected home, reload, request list/Past empty state, failed-save input recovery, acknowledged profile restore and logout/route guard. **22 limited customer/anonymous HTTP checks** were rerun and passed. The three-account environment preflight remains blocked; the newly prepared Phase 6 runner has **not** executed live. The 68 Flutter tests from the previous checkpoint remain historical, not new two-baker acceptance. No native acceptance or emulator installation was attempted.
+
+The prior Supabase secret API key exposure remains unresolved until an owner/operator confirms rotation/revocation; never paste the key in chat. Phase 5 and Phase 6 do **not** meet their acceptance criteria. The next milestone is a dedicated verified customer/two-baker laptop run plus the lifecycle policy decision. Release remains not approved.
+
 ## Current release audit and integrity repair (2026-10-29)
 
 The current tree is **not release complete**. Later Phase 5–10 sources build on `ea5966f` and are preserved in the subsequent local checkpoint. The linked development project has thirteen matching migrations, including a tested, forward-only repair for the broken Storage gate, confirmation agreement/replay authorization, Decorating capacity, bakery-timezone due times and manual-order replay isolation. The incomplete deletion endpoint/control is disabled; conversation uploads remain closed. The original report that the CLI was unavailable is superseded by this observed deployment.

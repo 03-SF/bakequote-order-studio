@@ -1,5 +1,23 @@
 # Live Supabase integration verification
 
+## Phase 5–6 acceptance preparation (2026-10-29)
+
+| Scenario | Actual result | Status |
+| --- | --- | --- |
+| Development migration inventory | Thirteen local and remote versions matched | PASS, inventory only |
+| Limited customer/anonymous HTTP | 22 checks rerun, including unowned/missing-target denial and disabled deletion | PASS, limited; no unrelated real target |
+| Customer / Baker A / Baker B readiness | Test-account environment variables absent in this session; prior customer fixture exists separately | BLOCKED |
+| Quote revision, old agreement invalidation, stale revision/agreement and quote history | Five new checks pass as part of 135 modeled PostgreSQL checks | PASS, modeled only |
+| Web build and Chrome customer regression | Release Web bundle built; seven checks passed including request-list empty state, profile failure/retry and session logout | PASS, limited: no positive baker/order workflow |
+| Acceptance-runner safety | 15 Python setup tests passed; linked project and fixture guards checked; SQLSTATE error handling is sanitized | PASS, local only |
+| Real request, reference image and cross-account before/after check | No dedicated two-baker sessions supplied; no positive live execution | BLOCKED |
+| Real two-request last-slot race, exact retry, fresh-session persistence | `verify_phase6.py` prepared and preflight tested; no authenticated real execution | BLOCKED |
+| Approved complete production lifecycle | Mandatory Decorating differs from original requirements; owner decision pending | BLOCKED; no data changed |
+| Previously exposed Supabase secret API key | Rotation/revocation unconfirmed | OPEN security incident |
+| Native Android/iOS acceptance | Owner deferred; no emulator installation attempted | DEFERRED |
+
+See [the completion matrix](phase-completion-matrix.md) for secure local prompts, fixture prerequisites, clear mutation/retention behavior of the prepared runner and unresolved lifecycle decision. Offline functionality is excluded. Historical single-account HTTP and Chrome results remain limited to their stated scope.
+
 ## Release integrity continuation: 2026-10-29
 
 | Check | Actual result | Status | Sanitized evidence |

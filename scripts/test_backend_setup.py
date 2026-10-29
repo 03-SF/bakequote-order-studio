@@ -1,15 +1,53 @@
 import base64
 import json
+import io
 import os
 from pathlib import Path
 import tempfile
 import unittest
+import urllib.error
 from unittest.mock import patch
 
 from backend_setup import SetupError, load_live_config, require_accounts
+import verify_phase6
+from verify_backend import Api
 
 
 class BackendSetupTests(unittest.TestCase):
+    def test_phase6_refuses_config_from_a_different_linked_project(self):
+        with patch('verify_phase6.Path.read_text', return_value='dev-project'):
+            verify_phase6.require_linked_project({'SUPABASE_URL': 'https://dev-project.supabase.co'})
+            with self.assertRaisesRegex(SetupError, 'does not match'):
+                verify_phase6.require_linked_project({'SUPABASE_URL': 'https://another-project.supabase.co'})
+
+    def test_backend_error_returns_only_whitelisted_sqlstate(self):
+        payload = b'{"code":"40001","message":"private content","details":"private token"}'
+        error = urllib.error.HTTPError('https://example.invalid', 500, 'Error', {}, io.BytesIO(payload))
+        with patch('urllib.request.urlopen', side_effect=error):
+            status, result = Api('https://example.invalid', 'public').call('POST', '/rpc', {}, include_error_code=True)
+        self.assertEqual((status, result), (500, {'code': '40001'}))
+
+    def test_phase6_requires_explicit_disposable_fixture_flag(self):
+        environment = {f'BQ_TEST_{role}_{field}': 'fixture' for role in verify_phase6.ROLES for field in ('EMAIL', 'PASSWORD')}
+        environment.update({'BQ_PHASE6_ORDER_ONE': '00000000-0000-4000-8000-000000000001', 'BQ_PHASE6_ORDER_TWO': '00000000-0000-4000-8000-000000000002'})
+        with patch.dict(os.environ, environment, clear=True), patch('sys.argv', ['verify_phase6.py']), patch.object(verify_phase6, 'load_live_config', return_value={}), patch.object(verify_phase6, 'run') as run:
+            self.assertEqual(verify_phase6.main(), 2)
+            run.assert_not_called()
+    def test_phase6_requires_two_distinct_valid_fixture_ids(self):
+        fixture = '00000000-0000-4000-8000-000000000001'
+        with patch.dict(os.environ, {'BQ_PHASE6_ORDER_ONE': fixture, 'BQ_PHASE6_ORDER_TWO': fixture}, clear=True):
+            with self.assertRaisesRegex(SetupError, 'distinct'):
+                verify_phase6.order_ids()
+        with patch.dict(os.environ, {'BQ_PHASE6_ORDER_ONE': 'invalid'}, clear=True):
+            with self.assertRaisesRegex(SetupError, 'BQ_PHASE6_ORDER_ONE'):
+                verify_phase6.order_ids()
+
+    def test_phase6_preflight_makes_no_live_requests(self):
+        environment = {f'BQ_TEST_{role}_{field}': 'fixture' for role in verify_phase6.ROLES for field in ('EMAIL', 'PASSWORD')}
+        environment.update({'BQ_PHASE6_ORDER_ONE': '00000000-0000-4000-8000-000000000001', 'BQ_PHASE6_ORDER_TWO': '00000000-0000-4000-8000-000000000002'})
+        with patch.dict(os.environ, environment, clear=True), patch('sys.argv', ['verify_phase6.py', '--preflight-only']), patch.object(verify_phase6, 'load_live_config', return_value={}), patch.object(verify_phase6, 'run') as run:
+            self.assertEqual(verify_phase6.main(), 0)
+            run.assert_not_called()
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

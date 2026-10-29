@@ -317,20 +317,33 @@ const due=await scalar("SELECT ($1::date + time '12:00') AT TIME ZONE 'Asia/Kara
 await as('authenticated',a,()=>denied(()=>db.query("SELECT public.confirm_order_local($1,1,1,'12:00',$2)",[order,confirmOp]),'confirmation without customer agreement rejected','40001'));
 check(await scalar('SELECT status FROM public.order_requests WHERE id=$1',[order])==='pending','rejected confirmation leaves order pending');
 await as('authenticated',c,()=>db.query("SELECT public.record_order_agreement($1,1,'Customer agreed',NULL)",[order]));
+const revisedEstimate={subtotal_paisa:500000,delivery_paisa:0,total_paisa:500000,lines:[{label:'Revised quote',amount_paisa:500000}]};
 await as('authenticated',a,async()=>{
- const confirmed=await scalar("SELECT to_jsonb(public.confirm_order_local($1,2,1,'12:00',$2))",[order,confirmOp]);
+ const revised=await scalar('SELECT to_jsonb(public.revise_order_quote($1,1,$2,$3))',[order,revisedEstimate,'Change requested']);
+ check(revised.version===2,'baker creates a new immutable quote version');
+ await denied(()=>db.query("SELECT public.confirm_order_local($1,3,2,'12:00',$2)",[order,confirmOp]),'new quote invalidates previous agreement','40001');
+ await denied(()=>db.query('SELECT public.revise_order_quote($1,1,$2,$3)',[order,revisedEstimate,'Stale revision']),'stale quote revision rejected','40001');
+});
+await as('authenticated',c,async()=>{
+ const rows=(await db.query('SELECT version,estimate FROM public.request_quotes WHERE order_id=$1 ORDER BY version',[order])).rows;
+ check(rows.length===2 && rows[0].estimate.total_paisa===410000 && rows[1].estimate.total_paisa===500000,'quote history preserves both amounts');
+ await denied(()=>db.query("SELECT public.record_order_agreement($1,1,'Stale quote',NULL)",[order]),'customer cannot agree to obsolete quote','40001');
+ await db.query("SELECT public.record_order_agreement($1,2,'Customer agreed to revised quote',NULL)",[order]);
+});
+await as('authenticated',a,async()=>{
+ const confirmed=await scalar("SELECT to_jsonb(public.confirm_order_local($1,4,2,'12:00',$2))",[order,confirmOp]);
  check(confirmed.status==='confirmed','agreed current quote confirms');
  check(await scalar("SELECT (due_at AT TIME ZONE 'Asia/Karachi')::time = time '12:00' FROM public.order_requests WHERE id=$1",[order]),'due time uses bakery timezone');
- const retry=await scalar('SELECT to_jsonb(public.confirm_order($1,2,1,$2,$3))',[order,due,confirmOp]);
+ const retry=await scalar('SELECT to_jsonb(public.confirm_order($1,4,2,$2,$3))',[order,due,confirmOp]);
  check(retry.id===order && retry.status==='confirmed','confirmation exact retry is idempotent');
- await denied(()=>db.query('SELECT public.confirm_order($1,2,2,$2,$3)',[order,due,confirmOp]),'confirmation operation ID cannot be reused with different input','40001');
- const baking=await scalar("SELECT to_jsonb(public.transition_order($1,3,'baking',$2))",[order,transitionOp]);
+ await denied(()=>db.query('SELECT public.confirm_order($1,4,1,$2,$3)',[order,due,confirmOp]),'confirmation operation ID cannot be reused with different input','40001');
+ const baking=await scalar("SELECT to_jsonb(public.transition_order($1,5,'baking',$2))",[order,transitionOp]);
  check(baking.status==='baking','owner advances confirmed order');
- await denied(()=>db.query("SELECT public.transition_order($1,3,'decorating',$2)",[order,transitionOp]),'transition retry with changed action rejected','40001');
- await db.query("SELECT public.transition_order($1,4,'decorating',gen_random_uuid())",[order]);
+ await denied(()=>db.query("SELECT public.transition_order($1,5,'decorating',$2)",[order,transitionOp]),'transition retry with changed action rejected','40001');
+ await db.query("SELECT public.transition_order($1,6,'decorating',gen_random_uuid())",[order]);
 });
 check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===1,'decorating order still consumes capacity');
-await as('authenticated',b,()=>denied(()=>db.query("SELECT public.transition_order($1,3,'baking',$2)",[order,transitionOp]),'unrelated baker cannot retrieve order through operation replay','42501'));
+await as('authenticated',b,()=>denied(()=>db.query("SELECT public.transition_order($1,5,'baking',$2)",[order,transitionOp]),'unrelated baker cannot retrieve order through operation replay','42501'));
 check(await scalar('SELECT status FROM public.order_requests WHERE id=$1',[order])==='decorating','denied operation leaves order unchanged');
 const manualOp='a0000000-0000-4000-8000-000000000003';
 let manual;

@@ -1,5 +1,7 @@
 # Requirements traceability
 
+Current scope and evidence are in [the Phase 5–10 completion matrix](phase-completion-matrix.md). English-only supersedes bilingual requirements; offline functionality is excluded. Existing draft/session persistence and connection-error recovery remain required, but do not establish or promise offline operation. Phases 5 and 6 are not accepted: positive multi-account hosted workflow, last-capacity race and lifecycle acceptance are outstanding.
+
 ## Phase 5 current evidence (2026-10-29)
 
 | ID | Requirement | Implementation/evidence | Remaining acceptance |
@@ -53,7 +55,7 @@ Statuses: Foundation = Phase 1 code; Implemented/pending integration = Phase 2 s
 | M02 | Chat never confirms or changes prices | UI notice; no chat mutator; backend authority planned | 6,8 |
 | R01 | Own delivered app order review only | Pure ownership/manual/reviewed eligibility tests; backend unique constraint/RLS planned | 8 |
 | X01 | Notifications/report/block | Planned, no false delivery/moderation claims | 8 |
-| X02 | Offline drafts/cache, blocked authoritative operations | Pure confirm offline precondition; device caching/reconnect planned | 5,9 |
+| X02 | Safe network-error recovery, session restoration, and no unsafe duplicate online writes | Local draft/session recovery and explicit retry; hosted lost-response and native lifecycle checks outstanding. Offline functionality excluded. | 5,9 |
 | X03 | Accessibility and readable English | SafeArea/scrolling/48px buttons/large-text tests; full device/screen-reader review planned | 1,9 |
 | X04 | Account deletion/legal/retention | Owner decisions open; secure deletion workflow planned | 9 |
 | X05 | Plans/export/backup/restore | No invented pricing/allowance; owner applicability unresolved | 9 |
@@ -66,7 +68,7 @@ Statuses: Foundation = Phase 1 code; Implemented/pending integration = Phase 2 s
 | NFR-03 | Performance benchmarks and supported-device matrix | Proposed measurable tests recorded; no results claimed; configured iOS 13.0, Android uses Flutter minSdk | 10 |
 | NFR-04 | Cross-account, private storage, email and native lifecycle verification | Local/model evidence is not live evidence; see current status and handoff | 2,3,10 |
 
-Domain port scope is explicit: web date parsing, catalog conflict checking, private projection and localStorage export/reset tests are not represented as migrated functionality. Their real equivalents belong to availability, ownership and offline/restore phases. Do not infer backend enforcement from these advisory Dart tests.
+Domain port scope is explicit: web date parsing, catalog conflict checking, private projection and localStorage export/reset tests are not represented as migrated functionality. Appropriate availability, ownership and authorized restore behavior require independent implementation and verification. Offline functionality is excluded. Do not infer backend enforcement from these advisory Dart tests.
 
 ## Phase 2 evidence matrix
 

@@ -1,5 +1,7 @@
 # BakeQuote architecture contract
 
+Current reconciliation: English-only, offline functionality excluded. Session restoration and safe recovery of unsent user input remain supported without promising offline workflows. Phase 5–10 implementation and live acceptance are not complete; [the completion matrix](phase-completion-matrix.md) supersedes older phase-status statements below. Production lifecycle currently includes an unapproved mandatory Decorating deviation; preserve existing data until an owner decision and tested migration. Order-reference access is participant-gated, while conversation uploads and account deletion remain disabled.
+
 ## Phase 5 extension (2026-10-29)
 
 The [request feature](../lib/features/requests/) uses pure typed domain models/contracts, Supabase/SharedPreferences mapping in data, Riverpod workflow coordination in application, and forms/list/detail widgets in presentation. Its public entry point is `requests.dart`; discovery opens the composed router route rather than importing private request data. Widgets pick input/files but do not coordinate database writes. Application providers own pagination, private signed-image URLs and identity-scoped repository injection. Captured-session checks and operation epochs prevent stale results/caches after navigation or account changes.

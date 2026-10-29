@@ -1,5 +1,7 @@
 # Non-functional requirements register
 
+Current owner scope: **offline functionality is excluded**. Retain connection-failure feedback, session and recoverable-input persistence, and protected/idempotent online retry; do not infer an offline browsing, editing, queue or synchronization requirement. Historical offline-feature statements below are superseded. The [phase completion matrix](phase-completion-matrix.md) records actual acceptance and unresolved lifecycle policy.
+
 ## Current Phase 5 evidence overlay (2026-10-29)
 
 The baseline IDs/acceptance criteria below remain stable. This overlay supersedes historical “not implemented/no environment” status for the listed workflows; it does not approve proposed performance/platform/recovery targets.
@@ -50,7 +52,7 @@ Status: Phase 3A baseline, 2026-10-26. `Proposed` targets are engineering propos
 
 ## Performance and capacity
 
-Targets below are **proposed**, not owner-approved. Proposed device: physical mid-range Android with 4 GB RAM (Android minimum-supported API and iOS minimum-supported device, once release matrix is approved); release/profile build, warm app install, 60 Hz display. Proposed network baseline: stable Wi-Fi, 50 ms RTT to development region, 10 Mbps up/down; add offline, 400 ms RTT and 1 Mbps cases for degraded behavior. Measure 30 cold/warm runs and report p50/p95 separately. Record device, OS, build, app commit, backend region, dataset and network shaping.
+Targets below are **proposed**, not owner-approved. Proposed device: physical mid-range Android with 4 GB RAM (Android minimum-supported API and iOS minimum-supported device, once release matrix is approved); release/profile build, warm app install, 60 Hz display. Proposed network baseline: stable Wi-Fi, 50 ms RTT to development region, 10 Mbps up/down; add 400 ms RTT and 1 Mbps cases for degraded behavior. Measure 30 cold/warm runs and report p50/p95 separately. Record device, OS, build, app commit, backend region, dataset and network shaping.
 
 | ID | Requirement | Workflow | Acceptance criterion | Verification method | Target phase | Status / assumptions |
 | --- | --- | --- | --- | --- | --- | --- |

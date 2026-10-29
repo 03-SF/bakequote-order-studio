@@ -1,5 +1,7 @@
 # Implementation plan
 
+Current owner scope (2026-10-29): English-only; **offline functionality is excluded**. Preserve ordinary session persistence, unsent-input recovery, network-failure handling and idempotent online retries without claiming offline operation. The original Phase 5–10 labels and their actual implementation/acceptance status are reconciled in [the phase completion matrix](phase-completion-matrix.md). Mandatory Decorating is an unresolved deviation from the original lifecycle; do not silently change existing records or claim owner approval.
+
 ## Current scope: Phase 5 implementation delivered (2026-10-29)
 
 The owner authorized Phase 5 after `ea5966f`. Four-step request builder, account/bakery drafts, server review/revalidation, atomic idempotent Pending submission, private references and customer/baker list/detail are implemented in migration 007 and the request feature. Seven migrations now match development; no reset. See [Phase 5 handoff](phase-5-handoff.md) for local, limited-live and blocked acceptance. The positive three-account workflow remains blocked; no native test is inferred from Chrome. **Stop before Phase 6.** All earlier current-scope/stop-before-5 wording below is historical.
@@ -34,14 +36,14 @@ Storage: owner-scoped business/product image paths with explicit publication; pr
 | 6 Quotes/lifecycle | Quote versions/agreement, explicit baker confirmation, production, cancellation/withdrawal/decline, reschedule | Database race/role/idempotency tests; stale agreements rejected; valid transitions only |
 | 7 Baker operations | Today/calendar/search/filter, manual orders/contacts, private notes, advances/balances | No customer note/event leakage; manual orders create no account/chat; payments explicitly external |
 | 8 Communication | Order messages/images/retry/read state, Realtime, notifications, reviews/report/block | Participant-only access, manual exclusion, eligibility/abuse/failure tests; no chat authority |
-| 9 Cross-cutting | Offline cache/drafts/reconnect, English accessibility, deletion, approved plan/export/restore | No offline authoritative writes; deletion/retention and restore access verified against owner decisions |
+| 9 Cross-cutting | English accessibility, account deletion, applicable plan/billing recovery and encrypted export/restore | Owner decisions, working implementations, retention and recovery acceptance; offline functionality excluded |
 | 10 Release | Acceptance suite, device matrix, performance/security, signing/beta builds and operations docs | Android and iOS physical devices, backup drills, migrations/monitoring/runbooks and store approval |
 
 Phase 1 is archived at 7a0e150. Current scope is Phase 3; stop before Phase 4. Each later phase updates traceability and status, and introduces migrations only with tests for authoritative invariants. Never infer completed features from a screen or helper.
 
 ## Quality strategy
 
-Pure tests cover price precision, quote history and state rules. Widget tests cover both navigation systems, narrow English layouts, text scaling and quotation sheet. Later repository tests cover loading/error/offline states; database tests cover RLS/storage ownership, transactions, races and retries; integration/device tests cover end-to-end customer/baker journeys, app links, keyboards, uploads, screen readers and restoration. Neither in-memory tests nor an APK build substitute for device acceptance.
+Pure tests cover price precision, quote history and state rules. Widget tests cover navigation, narrow English layouts, text scaling and quotations. Repository tests cover loading, connection failures and safe recovery; database tests cover RLS/storage ownership, transactions, races and retries; integration/device tests cover customer/baker journeys, app links, keyboards, uploads, screen readers and restoration. Neither in-memory tests nor an APK build substitute for device acceptance.
 
 ## Phase 3A architecture and non-functional baseline
 

@@ -1,5 +1,12 @@
 # Decisions and open questions
 
+## Scope reconciliation (2026-10-29)
+
+50. The current owner instruction supersedes bilingual and offline-functionality scope: BakeQuote is English-only and offline functionality is excluded. Preserve normal online error handling, session/draft recovery and safe idempotent retries. An unsent local draft is not an offline submission feature.
+51. Original user requirements, the reference state machine and the `ea5966f` domain rules all use Confirmed → Baking → Ready → Delivered. Mandatory Decorating was introduced in the later `f057a16` work; no recorded owner approval was found. Its future role is unresolved. Existing Decorating records and their capacity must remain intact until the owner chooses a forward-compatible policy and a migration is tested.
+52. Billing recovery, encrypted backup/restore and account deletion are requested in the later Phase 9 scope. Applicable plans, provider product IDs, commercial prices/limits, archive scope, key recovery, retention and operational recovery commitments remain unresolved. Existing entitlement/export/job foundations do not constitute those completed features. Conversation-image uploads and account deletion remain unavailable until their implementations and acceptance checks are complete.
+53. The exposed privileged credential was a Supabase `sb_secret_` API key; rotation/revocation is not confirmed. [The completion matrix](phase-completion-matrix.md) records a secure, owner-operated rotation procedure and explicitly distinguishes secret key, publishable key and unrelated credentials.
+
 ## Phase 5 implementation decisions (2026-10-29)
 
 44. Owner authorizes customer requests despite explicitly documented missing two-baker live acceptance. Phase 5 is implemented; stop before Phase 6. No role enrollment/membership redesign. Existing authenticated identity owns requests; initial experience remains navigation, not a privilege claim.

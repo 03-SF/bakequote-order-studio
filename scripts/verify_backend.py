@@ -6,6 +6,7 @@ import argparse
 import base64
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -20,7 +21,7 @@ class Api:
     def __init__(self, url, key, token=None):
         self.url, self.key, self.token = url.rstrip('/'), key, token
 
-    def call(self, method, path, data=None, mime=None):
+    def call(self, method, path, data=None, mime=None, include_error_code=False):
         headers = {'apikey': self.key, 'Content-Type': mime or 'application/json'}
         if self.token:
             headers['Authorization'] = 'Bearer ' + self.token
@@ -36,7 +37,16 @@ class Api:
                     value = raw
                 return response.status, value
         except urllib.error.HTTPError as error:
-            # Deliberately do not print response bodies or tokens on failures.
+            # Return only a sanitized SQLSTATE when explicitly requested; never
+            # print server messages, details, URLs, bodies or authentication data.
+            if include_error_code:
+                try:
+                    parsed = json.loads(error.read())
+                    code = parsed.get('code') if isinstance(parsed, dict) else None
+                    if isinstance(code, str) and re.fullmatch(r'[A-Z0-9]{5}', code):
+                        return error.code, {'code': code}
+                except (ValueError, UnicodeError, OSError):
+                    pass
             return error.code, None
 
 
