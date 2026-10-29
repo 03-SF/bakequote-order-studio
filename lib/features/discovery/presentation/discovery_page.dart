@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../auth/application/auth_controller.dart';
 import '../application/discovery_controller.dart';
@@ -160,6 +161,12 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage> {
                     ),
                     _image(product.imageUrl, product.name),
                     Text(product.description),
+                    FilledButton.tonal(
+                      onPressed: () => context.push(
+                        '/live/customer/request/${bakery.id}/${product.id}',
+                      ),
+                      child: const Text('Customize request'),
+                    ),
                     if (product.startingPrice != null)
                       Text(
                         'From ${paisaText(product.startingPrice!)} before customizations and delivery',

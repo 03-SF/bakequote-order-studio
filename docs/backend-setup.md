@@ -1,12 +1,58 @@
 # Supabase development setup
 
+## Current Phase 5 commands (2026-10-29)
+
+Seven migrations are applied to the linked development project. Do not reset it. Positive multi-account request acceptance remains blocked by verified baker fixtures, not missing client configuration. All older missing-project observations below are historical.
+
+From `mobile` in PowerShell (`flutter` on PATH, or use `D:\flutter\flutter\bin\flutter.bat` on this workstation):
+
+```powershell
+flutter pub get
+# Preview, isolated from Supabase:
+flutter run -d chrome --web-port 7358 --dart-define=APP_MODE=preview
+# Live laptop development (stop any existing port-7357 host first):
+flutter run -d chrome --web-port 7357 --dart-define-from-file=config/web.local.json
+# Or build and serve for automated Chrome checks:
+flutter build web --release --dart-define-from-file=config/web.local.json
+python scripts/serve_flutter_web.py
+```
+
+In a separate terminal, same directory:
+
+```powershell
+python scripts/verify_phase5_single.py
+python scripts/verify_web_account.py
+python scripts/verify_phase5.py --preflight-only
+# After secure BQ_TEST account setup and a dedicated active baker catalog:
+python scripts/verify_cross_account.py
+python scripts/verify_phase5.py
+```
+
+The single-account runner reads the existing ignored `config/email-check.local.json` fixture and never sends email. The three-account runner uses environment variables described in [verification](integration-verification.md), leaves one test Pending request for inspection, and refuses to overwrite an unsent draft. Client/public keys are not deployment privileges; no service-role key is used for permission tests.
+
+```powershell
+npx.cmd --yes supabase@2.122.0 migration list --linked
+npx.cmd --yes supabase@2.122.0 db push --linked --dry-run
+# Only after inspecting the pending version(s), on the confirmed development project:
+npx.cmd --yes supabase@2.122.0 db push --linked --yes
+flutter test
+flutter analyze
+dart format --output=none --set-exit-if-changed lib test
+python -m unittest discover -s scripts -p test_backend_setup.py
+node scripts/sql-test/verify.mjs
+# Compile only; native installation/acceptance remains deferred:
+flutter build apk --debug --dart-define-from-file=config/local.json
+```
+
+Ignored native config remains `config/local.json`; ignored browser config is `config/web.local.json`. Both use `APP_MODE`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `AUTH_CALLBACK_BASE`. Browser base is `http://localhost:7357/auth`; native base is `dev.bakequote.mobile://auth`. Keep exact `/verify` and `/reset` redirects separately allowlisted and email confirmation enabled. Do not change native callbacks to a web address. Browser success does not verify native dispatch/storage/permissions. See [Phase 5 demonstration](phase-5-handoff.md).
+
 Latest attempt and scenario-by-scenario evidence: [live integration verification](integration-verification.md). Live acceptance remains blocked until the documented development project/configuration/accounts exist.
 
 Start with the short numbered [hosted development owner guide](hosted-development-setup.md) when Docker/Podman are unavailable. HTTP runners now validate configuration and every required account before requests; `--preflight-only` checks these inputs without contacting Supabase. Missing setup reports `BLOCKED` (exit 2), not a raw file exception. No key values are printed. Actual registration, verification/resend and recovery are explicitly manual Flutter/email acceptance; the HTTP runner no longer sends signup to an invented example.test mailbox.
 
 ## Observed environment
 
-The current checkout has an ignored `config/local.json` template with empty URL/key, but no linked project or usable Supabase configuration. Supabase CLI 2.122.0 is available through npx. Project listing failed with `AccessTokenRequiredError`: no CLI login/access token. Local status failed with `StatusDbInspectError`: Docker and Podman were not found. No migrations or permission tests have executed against Supabase services. Phase 3 separately executes all migrations and ownership/pricing checks in a local PostgreSQL/WASM model; it does not verify Supabase Auth/PostgREST/Storage. SQL parsing remains syntax-only.
+The linked development project is `talwzfnrtxvyfejtwwnn`, and all twelve local migrations are now recorded as applied on the hosted database. Supabase CLI 2.122.0 is authenticated through the local CLI credential store, and the configured publishable key matches the linked project. PostgREST responds to the configured endpoint; protected tables correctly deny unauthenticated requests. Hosted Auth, Storage, RLS-positive-path, and multi-account acceptance still require dedicated test identities and scenario execution. Phase 3's local PostgreSQL/WASM model remains supplementary and does not replace those hosted checks.
 
 Architecture and acceptance boundaries are in [architecture.md](architecture.md) and [non-functional-requirements.md](non-functional-requirements.md). The local SQL model is not a hosted backend check. Execute identity and catalog RLS/storage tests against an isolated development project before treating live behavior as verified.
 

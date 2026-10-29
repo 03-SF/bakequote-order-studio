@@ -4,6 +4,7 @@ enum OrderStatus {
   pending,
   confirmed,
   baking,
+  decorating,
   ready,
   delivered,
   declined,
@@ -39,6 +40,7 @@ class OrderRules {
     this.agreedVersion,
     this.manual = false,
     this.cancellationRequested = false,
+    this.dueAt,
   }) : quotes = List.unmodifiable(quotes) {
     if (quotes.isEmpty) throw const RuleViolation('Order has no quotation');
   }
@@ -46,6 +48,7 @@ class OrderRules {
   final OrderStatus status;
   final int? agreedVersion;
   final bool manual, cancellationRequested;
+  final DateTime? dueAt;
   Quote get currentQuote => quotes.last;
   bool get isAgreed => agreedVersion == currentQuote.version;
   bool get reservesCapacity => {
@@ -60,12 +63,14 @@ class OrderRules {
     int? agreement,
     bool clearAgreement = false,
     bool? cancel,
+    DateTime? dueAt,
   }) => OrderRules(
     quotes: newQuotes ?? quotes,
     status: newStatus ?? status,
     manual: manual,
     agreedVersion: clearAgreement ? null : (agreement ?? agreedVersion),
     cancellationRequested: cancel ?? cancellationRequested,
+    dueAt: dueAt ?? this.dueAt,
   );
   void _pending() {
     if (status != OrderStatus.pending) {
@@ -113,13 +118,36 @@ class OrderRules {
   OrderRules advance(OrderStatus next) {
     const transitions = {
       OrderStatus.confirmed: OrderStatus.baking,
-      OrderStatus.baking: OrderStatus.ready,
+      OrderStatus.baking: OrderStatus.decorating,
+      OrderStatus.decorating: OrderStatus.ready,
       OrderStatus.ready: OrderStatus.delivered,
     };
     if (cancellationRequested || transitions[status] != next) {
       throw const RuleViolation('Invalid production transition');
     }
     return _copy(newStatus: next);
+  }
+
+  OrderRules decline() {
+    _pending();
+    return _copy(newStatus: OrderStatus.declined);
+  }
+
+  bool canBakerTransition(OrderStatus next) =>
+      {
+        OrderStatus.confirmed: OrderStatus.baking,
+        OrderStatus.baking: OrderStatus.decorating,
+        OrderStatus.decorating: OrderStatus.ready,
+        OrderStatus.ready: OrderStatus.delivered,
+      }[status] ==
+      next;
+
+  OrderRules withdraw() {
+    _pending();
+    if (manual) {
+      throw const RuleViolation('Manual orders cannot be withdrawn');
+    }
+    return _copy(newStatus: OrderStatus.withdrawn);
   }
 
   OrderRules requestCancellation() {

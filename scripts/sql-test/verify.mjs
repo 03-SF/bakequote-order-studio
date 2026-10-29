@@ -224,5 +224,123 @@ await as('authenticated',c,()=>checkAsyncRecent());
 async function checkAsyncRecent() {check(await scalar('SELECT count(*)::int FROM public.recent_businesses')===20,'recent history stays bounded at 20');}
 await as('authenticated',a,()=>db.query('SELECT public.set_business_publication($1,10,false)',[businessA]));
 await as('anon',null,()=>scalar('SELECT public.bakery_availability($1)',[codeA]).then(r=>check(r===null,'unpublished availability hidden by direct code')));
+await as('authenticated',a,()=>db.query('SELECT public.set_business_publication($1,11,true)',[businessA]));
+let draft, reviewed, order;
+const requestInput={product_id:product,variant_id:variant,option_ids:[finish,extra],quantity:1,service_date:day instanceof Date ? day.toISOString().slice(0,10) : String(day).slice(0,10),
+ fulfilment:'delivery',zone_id:zone,address:'Fixture delivery address',contact_name:'Fixture customer',phone:'03000000000',cake_message:'Happy day',instructions:'Fixture instructions',attachments:[]};
+await as('authenticated',c,async()=>{
+ draft=await scalar('SELECT to_jsonb(public.open_request_draft($1))',[businessA]);
+ check((await scalar('SELECT to_jsonb(public.open_request_draft($1))',[businessA])).id===draft.id,'one open draft per account and bakery');
+ draft=await scalar('SELECT to_jsonb(public.save_request_draft($1,0,$2))',[draft.id,requestInput]);
+ await denied(()=>db.query('SELECT public.save_request_draft($1,0,$2)',[draft.id,requestInput]),'stale draft edit rejected','40001');
+ reviewed=await scalar('SELECT to_jsonb(public.review_request($1,1))',[draft.id]);
+ check(reviewed.review.estimate.total_paisa===410000,'request review uses authoritative PKR 4100 estimate');
+});
+await as('authenticated',b,async()=>{
+ check((await db.query('SELECT * FROM public.request_drafts WHERE id=$1',[draft.id])).rows.length===0,'unrelated draft private');
+ await denied(()=>db.query('SELECT public.submit_request($1,$2)',[draft.id,reviewed.review_token]),'other account cannot submit draft','42501');
+});
+const refPath=`${c}/${draft.id}/80000000-0000-4000-8000-000000000001.png`;
+await as('authenticated',c,async()=>{
+ await db.query('SELECT public.register_request_upload($1,$2)',[draft.id,refPath]);
+ await db.query("INSERT INTO storage.objects(bucket_id,name) VALUES('order-references',$1)",[refPath]);
+ draft=await scalar('SELECT to_jsonb(public.save_request_draft($1,1,$2))',[draft.id,{...requestInput,attachments:[refPath]}]);
+ reviewed=await scalar('SELECT to_jsonb(public.review_request($1,2))',[draft.id]);
+});
+await as('authenticated',a,async()=>{
+ check((await db.query('SELECT name FROM storage.objects WHERE name=$1',[refPath])).rows.length===0,'baker cannot read unsubmitted reference image');
+});
+// Changed catalog must force a fresh review, even when customer's input is unchanged.
+await as('authenticated',a,()=>db.query('SELECT public.set_blocked_date($1,3,$2,true)',[businessA,day]));
+await as('authenticated',c,()=>denied(()=>db.query('SELECT public.submit_request($1,$2)',[draft.id,reviewed.review_token]),'newly blocked date rejected at submission','23514'));
+check(await scalar('SELECT count(*)::int FROM public.order_requests')===0,'unavailable date creates no order');
+await as('authenticated',a,()=>db.query('SELECT public.set_blocked_date($1,4,$2,false)',[businessA,day]));
+await db.query('UPDATE public.businesses SET revision=revision+1 WHERE id=$1',[businessA]);
+await as('authenticated',c,async()=>{
+ await denied(()=>db.query('SELECT public.submit_request($1,$2)',[draft.id,reviewed.review_token]),'changed catalog review rejected','40001');
+ check(await scalar('SELECT count(*)::int FROM public.order_requests')===0,'failed submission writes no request');
+ reviewed=await scalar('SELECT to_jsonb(public.review_request($1,2))',[draft.id]);
+});
+await db.exec("CREATE FUNCTION public.test_event_failure() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'isolated test failure'; END $$; CREATE TRIGGER test_event_failure BEFORE INSERT ON public.request_events FOR EACH ROW EXECUTE FUNCTION public.test_event_failure();");
+await as('authenticated',c,async()=>{
+ await denied(()=>db.query('SELECT public.submit_request($1,$2)',[draft.id,reviewed.review_token]),'late event failure rolls back submission','P0001');
+ check(await scalar('SELECT count(*)::int FROM public.order_requests')===0 && await scalar('SELECT count(*)::int FROM public.request_quotes')===0 && await scalar('SELECT submitted_order_id FROM public.request_drafts WHERE id=$1',[draft.id])===null,'late failure leaves no partial request or quote');
+});
+await db.exec('DROP TRIGGER test_event_failure ON public.request_events; DROP FUNCTION public.test_event_failure();');
+await as('authenticated',c,async()=>{
+ order=await scalar('SELECT public.submit_request($1,$2)',[draft.id,reviewed.review_token]);
+ check(await scalar('SELECT public.submit_request($1,$2)',[draft.id,reviewed.review_token])===order,'submission retry returns same order');
+ check(await scalar('SELECT count(*)::int FROM public.order_requests')===1,'duplicate submission creates one request');
+ await denied(()=>db.query('SELECT public.submit_request($1,gen_random_uuid())',[draft.id]),'same idempotency key different token rejected','40001');
+ await denied(()=>db.query('SELECT public.save_request_draft($1,2,$2)',[draft.id,requestInput]),'submitted content cannot be overwritten','23514');
+ check(await scalar('SELECT count(*)::int FROM public.request_quotes')===1 && await scalar('SELECT count(*)::int FROM public.request_events')===1,'initial quote and event persisted atomically');
+ check((await db.query('DELETE FROM storage.objects WHERE name=$1 RETURNING id',[refPath])).rows.length===0,'cleanup cannot delete submitted reference');
+});
+check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===0,'pending request consumes no capacity');
+await as('authenticated',a,async()=>{
+ check((await db.query('SELECT * FROM public.order_requests WHERE id=$1',[order])).rows.length===1,'correct baker reads request');
+ check((await db.query('SELECT name FROM storage.objects WHERE name=$1',[refPath])).rows.length===1,'correct baker reads submitted private reference');
+ await denied(()=>db.query("UPDATE public.order_requests SET status='confirmed' WHERE id=$1",[order]),'phase 6 actions unavailable','42501');
+});
+await as('authenticated',b,async()=>{
+ check((await db.query('SELECT * FROM public.order_requests WHERE id=$1',[order])).rows.length===0,'other baker cannot read order');
+ check((await db.query('SELECT * FROM public.request_quotes WHERE order_id=$1',[order])).rows.length===0,'other baker cannot read quote');
+ check((await db.query('SELECT name FROM storage.objects WHERE name=$1',[refPath])).rows.length===0,'other baker cannot read reference');
+ await denied(()=>db.query("INSERT INTO storage.objects(bucket_id,name) VALUES('order-references',$1)",[`${c}/${draft.id}/80000000-0000-4000-8000-000000000002.png`]),'unrelated image upload denied','42501');
+});
+await db.query("UPDATE public.products SET name='Changed future catalog',active=false WHERE id=$1",[product]);
+check((await scalar('SELECT snapshot FROM public.order_requests WHERE id=$1',[order])).product_name===products[0].name,'historical product snapshot remains unchanged');
+await as('authenticated',c,async()=>{
+ const next=await scalar('SELECT to_jsonb(public.open_request_draft($1))',[businessA]);
+ await db.query('SELECT public.save_request_draft($1,0,$2)',[next.id,requestInput]);
+ await denied(()=>db.query('SELECT public.review_request($1,1)',[next.id]),'inactive product cannot review new request','22023');
+});
+await db.query('UPDATE public.products SET active=true WHERE id=$1',[product]);
+await as('authenticated',c,async()=>{
+ const next=await scalar('SELECT to_jsonb(public.open_request_draft($1))',[businessA]);
+ await db.query('SELECT public.save_request_draft($1,1,$2)',[next.id,{...requestInput,attachments:[refPath]}]);
+ await denied(()=>db.query('SELECT public.review_request($1,2)',[next.id]),'reference from another draft cannot be attached','42501');
+ await db.query('SELECT public.save_request_draft($1,2,$2)',[next.id,{...requestInput,quantity:0}]);
+ await denied(()=>db.query('SELECT public.review_request($1,3)',[next.id]),'request minimum quantity revalidated','22023');
+ await db.query('SELECT public.save_request_draft($1,3,$2)',[next.id,{...requestInput,service_date:'2026-02-30'}]);
+ await denied(()=>db.query('SELECT public.review_request($1,4)',[next.id]),'request impossible date rejected','22008');
+ for(let i=1;i<=3;i++) await db.query('SELECT public.register_request_upload($1,$2)',[next.id,`${c}/${next.id}/90000000-0000-4000-8000-00000000000${i}.png`]);
+ await denied(()=>db.query('SELECT public.register_request_upload($1,$2)',[next.id,`${c}/${next.id}/90000000-0000-4000-8000-000000000004.png`]),'fourth active upload registration denied','22023');
+ const abandoned=`${c}/${next.id}/90000000-0000-4000-8000-000000000001.png`;
+ await db.query("INSERT INTO storage.objects(bucket_id,name) VALUES('order-references',$1)",[abandoned]);
+ await db.query('SELECT public.retire_request_upload($1)',[abandoned]);
+ check((await db.query('DELETE FROM storage.objects WHERE name=$1 RETURNING id',[abandoned])).rows.length===1,'abandoned unsubmitted image can be cleaned');
+});
+const confirmOp='a0000000-0000-4000-8000-000000000001';
+const transitionOp='a0000000-0000-4000-8000-000000000002';
+const due=await scalar("SELECT ($1::date + time '12:00') AT TIME ZONE 'Asia/Karachi'",[day]);
+await as('authenticated',a,()=>denied(()=>db.query("SELECT public.confirm_order_local($1,1,1,'12:00',$2)",[order,confirmOp]),'confirmation without customer agreement rejected','40001'));
+check(await scalar('SELECT status FROM public.order_requests WHERE id=$1',[order])==='pending','rejected confirmation leaves order pending');
+await as('authenticated',c,()=>db.query("SELECT public.record_order_agreement($1,1,'Customer agreed',NULL)",[order]));
+await as('authenticated',a,async()=>{
+ const confirmed=await scalar("SELECT to_jsonb(public.confirm_order_local($1,2,1,'12:00',$2))",[order,confirmOp]);
+ check(confirmed.status==='confirmed','agreed current quote confirms');
+ check(await scalar("SELECT (due_at AT TIME ZONE 'Asia/Karachi')::time = time '12:00' FROM public.order_requests WHERE id=$1",[order]),'due time uses bakery timezone');
+ const retry=await scalar('SELECT to_jsonb(public.confirm_order($1,2,1,$2,$3))',[order,due,confirmOp]);
+ check(retry.id===order && retry.status==='confirmed','confirmation exact retry is idempotent');
+ await denied(()=>db.query('SELECT public.confirm_order($1,2,2,$2,$3)',[order,due,confirmOp]),'confirmation operation ID cannot be reused with different input','40001');
+ const baking=await scalar("SELECT to_jsonb(public.transition_order($1,3,'baking',$2))",[order,transitionOp]);
+ check(baking.status==='baking','owner advances confirmed order');
+ await denied(()=>db.query("SELECT public.transition_order($1,3,'decorating',$2)",[order,transitionOp]),'transition retry with changed action rejected','40001');
+ await db.query("SELECT public.transition_order($1,4,'decorating',gen_random_uuid())",[order]);
+});
+check(await scalar('SELECT public.capacity_used($1,$2)',[businessA,day])===1,'decorating order still consumes capacity');
+await as('authenticated',b,()=>denied(()=>db.query("SELECT public.transition_order($1,3,'baking',$2)",[order,transitionOp]),'unrelated baker cannot retrieve order through operation replay','42501'));
+check(await scalar('SELECT status FROM public.order_requests WHERE id=$1',[order])==='decorating','denied operation leaves order unchanged');
+const manualOp='a0000000-0000-4000-8000-000000000003';
+let manual;
+await as('authenticated',a,async()=>{
+ manual=await scalar("SELECT to_jsonb(public.add_manual_order($1,'Fixture','03000000000','{}',10000,$2,$3,false))",[businessA,day,manualOp]);
+ check(manual.source==='manual' && manual.customer_id===null,'manual order has no customer identity');
+ check((await scalar("SELECT to_jsonb(public.add_manual_order($1,'Fixture','03000000000','{}',10000,$2,$3,false))",[businessA,day,manualOp])).id===manual.id,'manual create retry returns original');
+ await denied(()=>db.query("SELECT public.add_manual_order($1,'Changed','03000000000','{}',10000,$2,$3,false)",[businessA,day,manualOp]),'manual retry with changed input rejected','40001');
+});
+await as('authenticated',b,()=>denied(()=>db.query("SELECT public.add_manual_order($1,'Fixture','03000000000','{}',10000,$2,$3,false)",[businessB,day,manualOp]),'other baker cannot replay manual order operation','40001'));
+await as('authenticated',c,()=>denied(()=>db.query("SELECT public.request_account_deletion('DELETE')"),'unfinished account deletion unavailable','42501'));
 console.log(`${passed} local PostgreSQL runtime checks passed. Supabase services remain unverified.`);
 await db.close();

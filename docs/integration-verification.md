@@ -1,5 +1,21 @@
 # Live Supabase integration verification
 
+## Release integrity continuation: 2026-10-29
+
+| Check | Actual result | Status | Sanitized evidence |
+| --- | --- | --- | --- |
+| Development migration history | Thirteen local/remote versions match; one repair was dry-run inspected and applied without reset | PASS | Linked development CLI migration list |
+| Modeled PostgreSQL | 130 checks passed, including quote agreement, operation replay ownership, manual-order retry, timezone and Decorating capacity | PASS, modeled | PGlite modeled roles/Auth/Storage; not real concurrent transactions |
+| Existing customer and anonymous | 22 direct HTTP checks passed, including unowned confirmation and disabled incomplete deletion | PASS, limited | Ordinary customer session; missing-target tests do not prove access to another real user's data |
+| Flutter / release gate | 68 tests, formatting, analysis and SQL parsing passed; release remains NOT APPROVED | PASS, local only | `scripts/release_candidate.py` generated report; no hosted/device conclusion |
+| Android compile | Debug APK built in 113.9 seconds | PASS, build only | No installation or native acceptance |
+| Three-account preflight | Six BQ_TEST variables missing in runner environment; Baker A/B not configured | BLOCKED | No customer/Baker A/B cross-account request or positive order/attachment flow performed |
+| Billing, encrypted backup, deletion worker | Provider adapters and actual recovery/deletion implementations absent | NOT IMPLEMENTED | No Supabase Edge Functions or provider worker present; deletion disabled, conversation uploads closed |
+| Native acceptance | No installation, device or iOS build performed in this continuation | DEFERRED | Browser/local checks do not establish mobile behavior |
+| Release approval | Not approved | BLOCKED | See [gap analysis](release-readiness-gap-analysis.md) for precise implementation and external prerequisites |
+
+Use the secure local prompts below for the three-account tests. Do not paste passwords, access tokens or service-role keys into chat. No administratively confirmed identity is represented as email-delivery evidence.
+
 ## Latest Phase 4 verification: 2026-10-28
 
 | Test | Actual result | Status | Sanitized evidence |

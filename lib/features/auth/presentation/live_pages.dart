@@ -10,6 +10,9 @@ import 'auth_pages.dart';
 import '../../discovery/discovery.dart';
 import '../../availability/availability.dart';
 import '../../baker/application/baker_providers.dart';
+import '../../requests/requests.dart';
+import '../../baker/presentation/baker_operations_page.dart';
+import '../../billing/presentation/account_lifecycle_panel.dart';
 
 final accountImageProvider = FutureProvider.autoDispose.family<String, bool>((
   ref,
@@ -34,6 +37,12 @@ class LivePage extends ConsumerWidget {
     }
     if (view == 'account') {
       return LiveAccount(key: ValueKey(profile.id), profile: profile);
+    }
+    if (view == 'orders') {
+      return RequestListPage(
+        role: profile.experience ?? 'customer',
+        key: ValueKey(profile.id),
+      );
     }
     if (view == 'home' && profile.experience == 'customer') {
       return DiscoveryPage(
@@ -63,6 +72,9 @@ class LivePage extends ConsumerWidget {
               ),
             ),
           );
+    }
+    if (view == 'today' && profile.businessId != null) {
+      return const BakerTodayPage();
     }
     return ListView(
       padding: const EdgeInsets.all(24),
@@ -171,6 +183,8 @@ class _LiveAccountState extends ConsumerState<LiveAccount> {
         const SizedBox(height: 16),
         const AuthMessage(),
         Text(state.identity!.email, textDirection: TextDirection.ltr),
+        const SizedBox(height: 24),
+        const AccountLifecyclePanel(),
         const SizedBox(height: 24),
         Form(
           key: _form,

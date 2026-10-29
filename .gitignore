@@ -54,3 +54,4 @@ __pycache__/
 config/*.local.json
 
 /scripts/sql-test/node_modules/
+/release-candidate-report.json

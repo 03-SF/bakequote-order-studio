@@ -1,5 +1,19 @@
 # Phase 1-3 architecture and NFR audit
 
+## Phase 5 addendum (2026-10-29)
+
+| Requirement | Evidence | Gap | Required correction | Phase | Status |
+| --- | --- | --- | --- | --- | --- |
+| Application/data boundaries | Typed request domain, repository, controller and widget layers; pagination provider moved out of presentation | Existing cross-feature auth composition exception unchanged | Preserve public feature entry points | 5 | Implemented |
+| SEC-03/05 ownership | Migration 007 RLS, registered private paths, modeled other-baker reads and cleanup protection; 20 limited real endpoints | Real Baker A/B missing | Supply verified accounts securely; run prepared positive runner and compare target bytes/rows | 5 | Local/model verified; full live blocked |
+| DAT-03/04 atomic/idempotent submission | Injected event failure rolls back request/quote/draft; retry returns one order; changed token rejected | PGlite has no true multi-connection race run | Run hosted/local PostgreSQL concurrent retries and later confirmation races | 5,6 | Serialized transaction tests passed |
+| DAT-07/09 drafts/lost responses | Scoped persistent cache, revision checks, frozen uncertain state, explicit reload; final guards prevent late cache overwrite | Native restart/storage and full live interrupted submission absent | Device and positive-live acceptance | 5,10 | Local tests passed |
+| DAT-08 image replacement | No UPDATE policy, retire tombstones, shared draft lock protects submitted references; failed upload/retry tests | Device cache loss can strand orphan registrations/files | Owner-approved server retention/cleanup job later | 5,9 | Safe local/model contract; live positives blocked |
+| DAT-10 capacity/lifecycle | Pending creates no allocation; order/quote v1/event snapshot exists | Allocation FK/confirmation/agreement/allowance actions intentionally absent | Implement and race-test in Phase 6 before enabling transitions | 6 | Deferred by scope |
+| Accessibility/operations | Narrow 200% builder navigation test; versioned migration and setup scripts | Native screen reader/keyboard/device/performance not tested | Complete release matrix with actual hardware | 10 | Deferred, no inferred pass |
+
+The original Phase 3A audit below is historical. Current authorization and final evidence are in [Phase 5 handoff](phase-5-handoff.md).
+
 Date: 2026-10-26. Baseline verified at clean `7c6b03c`. Scope is Phase 3A architecture/NFR baseline only; Phase 4 feature work is not authorized here. Source, four versioned SQL migrations, local tests and Phase 1-3 handoffs were reviewed. Live Supabase remains unavailable, so modeled database tests are not production-backend evidence.
 
 | Requirement | Evidence | Gap | Required correction | Phase | Status |

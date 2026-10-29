@@ -1,6 +1,97 @@
 # Database and storage
 
-Migrations are versioned source, not proof of an applied database. Current live execution is blocked; see [Phase 3 handoff](phase-3-handoff.md). The following Phase 2 baseline is historical; Phase 3 changes below supersede its reserved product bucket, business completion and cleanup descriptions.
+Current deployment: the seven prior migration versions match the linked
+development project (2026-10-29). The Phase 5 progression migration is local
+and parsed but not yet deployed. Limited live checks pass; full
+cross-account acceptance remains blocked by dedicated baker credentials. See
+[current evidence](integration-verification.md).
+
+Phase 6 operations are defined in the local
+`20261029000300_baker_operations.sql` migration. It keeps contacts, notes and
+advances out of customer DTOs, preserves manual orders without customer
+accounts or conversations, and performs manual confirmation, usage and
+capacity writes atomically. It is parsed and locally wired but not deployed
+or concurrency-tested against the hosted database.
+
+## Phase 7 communication and moderation: 20261029000400_communication_moderation.sql
+
+The local Phase 7 migration adds participant-scoped `order_conversations` and
+`order_messages` for app orders only. Message writes go through a
+security-definer command that verifies the customer/baker relationship,
+rejects manual orders, blocked participants, closed orders, oversized text,
+and more than three attachments, while preserving duplicate
+`client_message_id` retries and server-assigned sequence numbers.
+`order_message_cursors` supports durable unread state and `notifications`
+stores recipient-scoped message notifications. Reviews are limited to the
+owning customer after delivery and are one per order. Participants may submit
+bounded reports and block the other participant; all communication and
+moderation tables have RLS and default client writes are revoked.
+
+The private `conversation-attachments` bucket is readable only when an
+authenticated participant is referenced by a registered message path. Upload
+paths are order/message UUID-shaped and limited to image types; the Flutter
+panel validates and uploads up to three images before sending, while the
+server verifies every referenced object. Hosted deployment,
+database-boundary concurrency tests, and live two-account acceptance are
+still required.
+
+## Phase 8 synchronization: 20261029000500_synchronization.sql
+
+The synchronization migration adds a monotonic identity-backed
+`feed_sequence` to append-only `order_events` and exposes the authenticated
+`sync_order_changes(after_sequence, limit)` endpoint. The endpoint returns a
+bounded ordered change page, the latest participant-visible order version and
+status for each event, and a cursor. It applies participant authorization
+inside the security-definer function, so unrelated orders are not returned.
+The client advances its cursor only after a successful response and reloads
+the authoritative order/detail state after synchronization.
+
+Mutating commands remain online-only and continue to require optimistic
+versions. Confirmation and lifecycle commands now use UUID operation IDs
+retained for retry after a lost response, preventing duplicate effects while
+stale versions surface an explicit conflict instead of silently overwriting
+another update. No offline queue or client-authoritative cache was added.
+
+## Phase 9 billing and lifecycle: 20261029000600_billing_lifecycle.sql
+
+`store_transactions` and `account_entitlements` are server-owned records.
+Their execution grants are revoked from all client roles; only a trusted
+provider-verification integration may apply a verified Apple/Google event.
+Provider, environment, transaction ID, product, payload digest, state and
+expiry are persisted, with a unique provider transaction key for duplicate
+callback reconciliation. The client can read only its own current entitlement,
+and usage data is never reset by reinstall, restore, downgrade or cancellation.
+
+`account_export_snapshot()` returns a bounded identity-scoped JSON snapshot
+for the account export foundation. It intentionally does not claim to be an
+encrypted archive or include arbitrary storage bytes. Encrypted maintained
+library backup/restore requires a release-approved cryptography adapter and
+key/passphrase handling; plaintext import is not implemented.
+
+`request_account_deletion('DELETE')` requires a recent authenticated session,
+blocks pending and active production orders, creates idempotent media/account
+cleanup jobs, and records status for support visibility. The migration does
+not pretend that a client can delete `auth.users`: a trusted cleanup worker
+must process jobs, remove private media and shared-history references under
+the approved retention policy, then complete Auth deletion. Subscription
+cancellation remains separate from account deletion.
+
+## Phase 5 requests: 20261029000100_customer_requests.sql
+
+| Table | Ownership and write contract |
+| --- | --- |
+| request_drafts | Auth customer UUID + bakery; self SELECT, no direct client writes. One open draft/customer/bakery; revision-checked save, reviewed snapshot/token and submitted-order link. |
+| order_requests | Customer + business ownership; customer/owning baker SELECT only. Unique source draft, UUID reference, lifecycle status, immutable snapshot, quote version, agreement, due time and optimistic version. |
+| request_quotes | Participant-only SELECT; initial estimate plus immutable baker revisions with reason, actor and timestamp. |
+| request_events | Participant-only SELECT; initial requested event. No private baker note/event data mixed in. |
+| request_uploads | Self SELECT through draft ownership; generated immutable path, retired tombstone. Registration/retirement require owner and draft lock. |
+| request_attachments | Participant-only SELECT; path/draft ownership validated before linking to order atomically. |
+
+Authenticated roles may execute the owner/participant-checked public RPCs; anonymous execution and default PUBLIC execution are revoked. Internal `request_snapshot`/`request_choice` have no client execution grant. All privileged functions use empty search paths. Review and submit lock the same business row used by catalog/availability changes; `source_draft_id` and token implement exact retry. A mismatched token fails, including after successful submission. The current date/catalog/fulfilment/minimum/attachments are revalidated before insertion; no client total or customer ID is trusted. Pending requests do not reserve capacity. The local Phase 5 migration adds business locking, atomic allocation/usage/confirmation, idempotent operation keys and single-step lifecycle commands; it still requires hosted and concurrent verification.
+
+Private `order-references` is now membership-enabled only through registered `<customer>/<draft>/<UUID>.(jpg|png|webp)` paths. Existing 5 MiB/type bucket limits remain; max three registered nonretired images is a proposed default. No UPDATE policy exists. Read permits draft owner or submitted order participants; insert requires owned unsubmitted nonretired registration. Delete checks submission membership under the draft lock. Tombstoning uncertain registration prevents delayed retries reviving abandoned paths. Client cleanup reconciles server status and cannot delete successful attachments. Signed URLs expire after 300 seconds; they remain bearer links until expiry, so never log/share them. Conversation attachments remain restrictive-denied.
+
+Frozen request snapshots expose exact pickup address only to participants, not through public discovery; owner IDs/private business contact fields are omitted. Submitted objects and snapshots have no Phase 5 deletion/retention API. Cleanup is best effort for abandoned objects; a lost local queue needs a future authorized server cleanup policy. File signature validation is client-side plus Storage declared MIME/size enforcement, not server malware scanning. See [full contract](phase-5-handoff.md).
 
 ## Identity migration: 20261026000100_identity.sql
 

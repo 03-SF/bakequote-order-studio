@@ -74,6 +74,7 @@ void main() {
     expect(
       c
           .advance(OrderStatus.baking)
+          .advance(OrderStatus.decorating)
           .advance(OrderStatus.ready)
           .advance(OrderStatus.delivered)
           .status,

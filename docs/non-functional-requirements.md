@@ -1,5 +1,19 @@
 # Non-functional requirements register
 
+## Current Phase 5 evidence overlay (2026-10-29)
+
+The baseline IDs/acceptance criteria below remain stable. This overlay supersedes historical “not implemented/no environment” status for the listed workflows; it does not approve proposed performance/platform/recovery targets.
+
+| IDs | Current verification status | Remaining gate |
+| --- | --- | --- |
+| SEC-01/03/04/05/08 | Migration 007 restricts draft/request/quote/event/reference access; explicit public catalog projection. Modeled different-customer/baker checks and limited anonymous/ordinary-user hosted endpoint denial pass. Conversation bucket still closed. | Positive reference upload + known-object cross-account HTTP requires dedicated verified bakers; no full Storage-service certification. |
+| SEC-09/10, DAT-07/09 | Project/account/bakery cache isolation, late-response cancellation, restoration, revision conflicts and input retention tested. Preferences/local storage are not claimed encrypted; account switching removes in-memory access, not disk contents. | Native at-rest/lifecycle acceptance and real two-account browser switching. |
+| DAT-01/02/03/04/10 | Authoritative integer-paisa reviewed snapshot, current availability recheck, initial quote/event/member attachment creation in one transaction. Modeled late-failure rollback and exact retry pass; Pending writes no capacity. | Real multi-connection race testing; Phase 6 agreement/confirmation/capacity/allowance/lifecycle remain absent. |
+| DAT-05/06/08 | No automatic authoritative write retry; explicit same-token recovery. Upload failure retains input; abandoned paths retired under draft lock; submitted attachments cannot be cleaned. | Positive hosted uncertain-upload/submission fault injection and cleanup after local-storage loss. |
+| PERF-07, A11Y/compatibility | Lists bounded to 20-row pages, private signed images 300 seconds; 390px/200% text builder Back test passes. | No performance numbers measured; native keyboard, screen reader, permissions and device matrix deferred. |
+
+Full suite/evidence counts and exact blockers are in [integration verification](integration-verification.md). Private reference count of three is a proposed engineering default requiring owner review. Server file-content scanning, retention and cleanup after lost local queues remain future requirements, not verified capabilities.
+
 Status: Phase 3A baseline, 2026-10-26. `Proposed` targets are engineering proposals for owner review, not previously approved commitments. Verification status distinguishes source/tests from real backend and device evidence. BakeQuote is English-only; no localization or RTL requirement is active.
 
 ## Security and privacy

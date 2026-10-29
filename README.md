@@ -1,6 +1,6 @@
 # BakeQuote Mobile
 
-Native Flutter/Dart app for customers and home bakers. Phase 3 adds English-only baker business setup, catalog/options, fulfilment, authoritative backend estimate RPCs and owned public images. **Live integration acceptance is blocked pending a development backend; see [Phase 3 handoff](docs/phase-3-handoff.md).** Ordering, availability and customer discovery remain later phases.
+English-only Flutter/Dart app for Android/iOS. Phases 1–5 now include authentication, baker setup/catalog/pricing, availability, customer bakery access and Pending order requests with private references. Development Supabase has seven migrations; full multi-account acceptance remains blocked by dedicated verified baker credentials. See [Phase 5 handoff](docs/phase-5-handoff.md) and [actual evidence](docs/integration-verification.md). Chrome is a development host; native acceptance remains deferred. Stop before Phase 6.
 
 Validated baseline SDK: Flutter 3.41.1 stable / Dart 3.11.0. Development identifiers: Android `dev.bakequote.bakequote_mobile`, iOS `dev.bakequote.bakequoteMobile`; callback scheme `dev.bakequote.mobile`. These are development defaults, not final store identities.
 

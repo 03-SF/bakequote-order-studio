@@ -1,4 +1,83 @@
-# Current project status - Phase 4 implementation, live acceptance pending
+# Current project status - Phase 5 progression in local implementation
+
+## Current release audit and integrity repair (2026-10-29)
+
+The current tree is **not release complete**. Later Phase 5–10 sources build on `ea5966f` and are preserved in the subsequent local checkpoint. The linked development project has thirteen matching migrations, including a tested, forward-only repair for the broken Storage gate, confirmation agreement/replay authorization, Decorating capacity, bakery-timezone due times and manual-order replay isolation. The incomplete deletion endpoint/control is disabled; conversation uploads remain closed. The original report that the CLI was unavailable is superseded by this observed deployment.
+
+130 modeled SQL checks and 22 limited live customer/anonymous checks passed; ten Python setup tests and 68 Flutter tests passed. Formatting, analysis, SQL parsing and local release gates passed. An Android debug APK compiled in 113.9 seconds without installation. Release approval is blocked. Full cross-account, hosted concurrency and positive order/image acceptance remain blocked by verified Baker A/B identities. Billing providers, encrypted backup/restore and actual deletion worker are **missing implementation**, not merely external test blockers. Native Android/iOS acceptance remains deferred. See [release readiness and exact gaps](release-readiness-gap-analysis.md). Earlier completion statements below describe partial foundations and are superseded wherever they conflict with this audit.
+
+Latest Phase 5 progression update (2026-10-29): the forward-only
+`20261029000200_order_progression.sql` migration adds immutable quote revision
+metadata, customer agreement records, atomic baker confirmation, monthly
+first-confirmation usage enforcement, idempotent operation keys, append-only
+order events, and strict production transitions through Decorating and
+Delivered. The typed client adapter, detail-screen quote/agreement/confirmation
+actions, lifecycle buttons and participant event display are wired without
+replacing the Phase 4 request flow. The migration is deployed to the linked
+development project. SQL parsing passed, Flutter analysis is clean, and the
+full local Flutter suite passes (68 tests). Database-boundary concurrency
+checks and customer/baker live acceptance are still pending.
+
+Latest Phase 6 update (2026-10-29): local baker operations now include a
+forward-only `20261029000300_baker_operations.sql` migration, timezone-aware
+Today queries, private bakery contacts, atomic manual confirmed orders with
+usage/capacity enforcement, baker-only notes and recorded advances,
+rescheduling, and cancellation request resolution. The existing Calendar
+availability panel remains intact and the baker Today surface now separates
+confirmed production from pending requests. Quick Add and contact forms are
+wired locally. The migration is deployed to the linked development project.
+Database-boundary tests and live baker acceptance remain pending; Phase 6 is
+not yet a hosted acceptance-complete milestone.
+
+Latest Phase 7 update (2026-10-29): communication and moderation are now
+include the forward-only `20261029000400_communication_moderation.sql`
+migration. App orders have participant-only conversations, idempotent
+client-message IDs, server sequencing, message length/attachment limits,
+unread cursors, durable notifications, delivered-order reviews, participant
+reports, and blocking. Manual orders cannot create conversations. The order
+detail route includes the conversation/report/block panel. SQL parsing,
+formatting, Flutter analysis, and the full local Flutter suite pass. The
+migration is deployed to the linked development project. RLS/concurrency
+checks, attachment upload acceptance, and live two-account
+communication/moderation acceptance remain pending. Phase 7 is implemented but
+not hosted acceptance-complete until those checks pass.
+
+Latest Phase 8 update (2026-10-29): online synchronization and conflict
+recovery are locally implemented through the forward-only
+`20261029000500_synchronization.sql` migration. Existing append-only order
+events now have a monotonic feed cursor, and authenticated participants can
+page changes without receiving unrelated orders. The order detail screen
+provides an explicit server refresh that advances its cursor only after a
+successful response. Existing version checks reject stale writes, while
+stable UUID operation IDs make lost-response command retries idempotent.
+Commands remain online-only; no parallel offline application or silent
+last-write-wins behavior was added. The migration is deployed to the linked
+development project. SQL parsing, formatting, analysis, and the Flutter suite
+pass. Stale-version concurrency, lost-response and second-device
+demonstrations remain pending.
+
+Latest Phase 9 update (2026-10-29): the local billing and lifecycle foundation
+is implemented through `20261029000600_billing_lifecycle.sql`. Store
+transactions and entitlements are server-owned, transaction IDs are unique,
+expiry/revocation/grace states are represented, and no client path can grant
+Pro. Authenticated users can request a scoped account snapshot and request
+deletion after recent-session confirmation; active orders block deletion and
+cleanup jobs are idempotent and retry-oriented. Account controls are wired
+into the live Account screen. The migration is deployed to the linked
+development project. Store purchase adapters, provider callbacks,
+encrypted backup/restore, media cleanup workers, and actual Auth deletion
+remain externally dependent and are explicitly not simulated. Phase 9 is
+deployed as a server-owned foundation but not commercially or hosted
+acceptance-complete.
+
+Latest Phase 10 update (2026-10-29): the release-candidate validation phase
+now has a reproducible `scripts/release_candidate.py` gate for formatting,
+analysis, Flutter tests, SQL parsing, optional web/APK builds, and config
+safety. It emits a local JSON report and intentionally returns
+`NOT_APPROVED` while hosted AT01–AT24 evidence, provider verification,
+backup/restore recovery, deletion workers, performance measurements, and
+native-device coverage are unavailable. The acceptance matrix and release
+decision are documented in [release-candidate.md](release-candidate.md).
 
 Latest Phase 4 update (2026-10-28): availability/calendar/settings/blocking, public availability/fulfilment, shared browser link destination and server-persisted recent bakeries are implemented. All six migrations match remotely after safe deployment. 57 Flutter tests and 81 modeled SQL checks passed; nine new limited live HTTP checks and six refreshed Chrome regression cases passed with the confirmed customer. Web debug build, formatting and analysis passed. Dedicated verified Baker A/B sessions are still missing, so full cross-account and positive baker/customer Chrome acceptance remain blocked. See [current handoff](phase-4-handoff.md) and [verification](integration-verification.md). Scheduling defaults are explicitly provisional; dual-role remains unresolved. Native acceptance is deferred. Stop before Phase 5. This work is being saved as the requested local Git checkpoint; no remote is configured. Older partial/uncommitted implementation notes below are historical.
 

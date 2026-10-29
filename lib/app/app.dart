@@ -11,6 +11,7 @@ import '../features/auth/presentation/auth_pages.dart';
 import '../features/auth/presentation/live_pages.dart';
 import '../features/baker/presentation/baker_pages.dart';
 import '../features/discovery/domain/discovery.dart';
+import '../features/requests/requests.dart';
 import '../features/availability/application/availability_controller.dart';
 
 class AuthRouterRefresh extends ChangeNotifier {
@@ -59,6 +60,21 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const WelcomePage()),
+      if (!preview)
+        GoRoute(
+          path: '/live/customer/request/:business/:product',
+          builder: (context, state) => RequestBuilderPage(
+            business: state.pathParameters['business']!,
+            product: state.pathParameters['product']!,
+          ),
+        ),
+      if (!preview)
+        for (final role in ['customer', 'baker'])
+          GoRoute(
+            path: '/live/$role/requests/:id',
+            builder: (context, state) =>
+                RequestDetailsPage(state.pathParameters['id']!),
+          ),
       GoRoute(
         path: '/bakery/:code',
         builder: (context, state) => const WelcomePage(),

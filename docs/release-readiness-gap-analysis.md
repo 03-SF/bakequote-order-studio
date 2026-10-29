@@ -1,0 +1,48 @@
+# Release readiness: remaining implementation and acceptance
+
+Updated 2026-10-29 after inspecting the actual working tree, migrations and development project. This report supersedes earlier statements that later phases were complete or that all remaining work was solely external acceptance. **Release is not approved.** The starting checkpoint was `ea5966f`; the subsequent local checkpoint preserves partial later-phase work and this audit. No Git remote or remote source backup is configured.
+
+## Confirmed repairs in this continuation
+
+The linked development project initially had twelve applied migrations. A dry run identified only `20261029000700_release_integrity_repairs.sql`; it was applied without reset and all thirteen local/remote versions match.
+
+- An obsolete restrictive Storage policy added by the communication migration blocked both product images and order-reference images. The repair removes that policy while retaining the existing owner/member policies. Conversation attachments stay **closed**, because their full ownership, upload, cleanup and retry lifecycle has not been accepted.
+- Confirmation now requires a recorded agreement for the current quote and cannot bypass a missing agreement through SQL NULL semantics. The selected due time is converted using the bakery timezone on the server. Ambiguous daylight-saving wall times need a further explicit policy/test; nonexistent times are rejected.
+- Order transition and confirmation operation replay now checks the authenticated actor, command and complete input before returning a result. Manual-order replay similarly checks business, actor and input. Existing legacy operation IDs without this binding are rejected rather than guessed. True concurrent, multi-connection hosted race tests remain outstanding.
+- Decorating is now an allowed capacity-allocation status and consumes capacity. New usage rows have no invented default plan limit; existing configured limits were preserved. Commercial plans/entitlement reconciliation remain unresolved and unverified.
+- The customer order screen loads and displays the current quote history and disables agreement until the current amount is visible. Lists show actual order statuses and distinguish the original estimate. A focused widget test covers the agreement display guard.
+- Account deletion is disabled at both the UI and authenticated RPC permission boundary. The previous screen promised asynchronous cleanup even though no cleanup worker exists, and the previous database check did not prove this session was recently reauthenticated. Existing jobs were not processed or deleted. Implement and validate an actual reauthentication and authorized cleanup flow before re-enabling it.
+
+## Actual evidence
+
+| Check | Actual result | Scope |
+| --- | --- | --- |
+| Hosted migration history | PASS: thirteen versions match | Development deployment; no reset |
+| Modeled PostgreSQL | PASS: 130 checks | PGlite modeled roles/Auth/Storage; includes agreement, retries, unchanged denied target, capacity, private references and disabled deletion. Not hosted concurrency or actual Storage service acceptance |
+| Live HTTP | PASS: 22 limited customer/anonymous checks | Existing confirmed ordinary customer; includes unowned confirmation and disabled deletion denial. No real second baker or positive new order/image |
+| Python setup | PASS: 10 tests | Local setup validation |
+| Dart formatting / Flutter analysis | PASS | Local source checks; see release runner for most recent results |
+| Flutter | PASS: 68 full-suite tests, including quote guard | Mock/widget/domain tests, not hosted acceptance |
+| Release gate | Local gates PASS; NOT APPROVED | `python scripts/release_candidate.py`; it cannot promote absent external evidence. First run had a formatting failure, subsequently corrected. |
+| Android | PASS: debug APK compiled in 113.9 seconds | No installation/device acceptance or native callback test |
+| iOS | DEFERRED | No macOS/Xcode build, signing, simulator or device test |
+
+The customer fixture establishes a verified normal session. The three-account preflight reports missing `BQ_TEST_CUSTOMER_EMAIL`, `BQ_TEST_CUSTOMER_PASSWORD`, `BQ_TEST_BAKER_A_EMAIL`, `BQ_TEST_BAKER_A_PASSWORD`, `BQ_TEST_BAKER_B_EMAIL`, and `BQ_TEST_BAKER_B_PASSWORD` in its terminal environment. The existing customer fixture is separate; no dedicated verified Baker A/B credentials are available here. Supply three distinct verified development identities using the secure local prompts in [integration verification](integration-verification.md), not ordinary chat. Keep email confirmation enabled and use supported inboxes or an authorized SMTP sender. Then run the prepared `verify_cross_account.py` and `verify_phase5.py` against disposable development businesses. The latter intentionally retains a Pending development request; review its prerequisites before running.
+
+## Unfinished implementation, not just missing credentials
+
+1. **Billing and recovery:** no Apple/Google purchase adapter, provider receipt verification, server callback/notification handler, entitlement reconciliation, restore-purchases flow, store product configuration or sandbox acceptance exists. Provider-side verification and service credentials must remain server-side. Product IDs, plan/limit rules, owner-approved pricing and sandbox accounts are needed before this can be completed. The existing server event function is only a restricted foundation; its transaction-to-account binding and out-of-order event handling require adversarial tests before connecting a provider. No payment or entitlement is claimed live.
+2. **Encrypted backup/restore:** the account snapshot is an on-screen JSON projection, not an encrypted archive, media backup, complete database backup or tested restore. Define data scope, authorization, key/passphrase recovery, archive format, migrations and conflict behavior; implement a standard authenticated-encryption archive and validate wrong-key, corruption, cross-account and restore recovery. A local Git commit is neither a database backup nor user export.
+3. **Deletion:** actual media cleanup, relational retention decisions, Auth deletion, retry/idempotency, verified recent reauthentication, operational monitoring and recovery are missing. The feature is deliberately unavailable until a safe worker and policy are in place. Owner must decide treatment of other participants' order/message history, legal retention and active orders. Never expose privileged credentials to Flutter.
+4. **Communication:** text messaging, reports and reviews have source/schema, but live participant permissions, duplicate/retry integrity, notification behavior, blocking and two-party flows are unverified. Private attachment uploads are intentionally denied; the upload ownership model, orphan cleanup, message retry content binding and real Storage access tests are not complete. Do not relax private policies merely to make uploads work.
+5. **Order reliability:** run current-version/stale quote, operation-ID reuse, lost-response, parallel final-capacity confirmation, manual-order retry and ownership tests against real PostgreSQL sessions. Local SQL tests are serialized. Manual-order operation IDs in the current UI are not persisted through an uncertain restart; this remains an implementation gap. Current quote history and action workflows still need full customer/baker Chrome acceptance and native testing.
+6. **Release acceptance:** AT01–AT24 require a scenario-level evidence matrix with actual executions, not just source/parse results. Measure performance against agreed datasets/devices and verify accessibility, offline/network interruption, account switching, native authentication callbacks, native picker/storage/permissions and background/resume. Android/iOS device acceptance remains deferred as previously instructed; push notifications require a configured provider and separate device test. No browser result proves native behavior.
+7. **Operations and decisions:** document and exercise deployment rollback, source and database backup/restore, encryption key management, incident monitoring and privileged key rotation. A privileged key was previously exposed in this conversation; rotation has not been confirmed. Dual-role enrollment, multi-business membership, pricing/limits, scheduling semantics, privacy/retention, legal policies and recovery/performance targets remain owner decisions. Do not treat provisional targets as owner-approved commitments.
+
+## Safe next steps
+
+1. Provide verified customer and two-baker development test accounts through the existing secure local prompts; configure Baker A/B test businesses and a disposable catalog. Do not paste passwords, tokens or service-role keys into chat.
+2. Complete direct two-account RLS and Storage probes with before/after checks, request/quote/confirmation acceptance, then concurrency tests against a disposable development dataset. Keep conversation uploads closed until their policies and cleanup are tested.
+3. Supply Apple and Google sandbox access, application/product IDs and owner-approved plan rules through an appropriate secure mechanism. Implement provider verification/reconciliation before enabling purchases.
+4. Agree backup archive scope and deletion/retention policies, implement the missing recovery/deletion services, and rehearse recoveries with disposable identities and media.
+5. Resume native installation and Android/iOS acceptance only when explicitly authorized and the required devices/macOS environment are available. Finish measurable AT01–AT24 and performance/security evidence before reconsidering release approval.

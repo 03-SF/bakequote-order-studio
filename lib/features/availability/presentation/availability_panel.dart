@@ -4,9 +4,15 @@ import '../application/availability_controller.dart';
 import '../domain/availability.dart';
 
 class AvailabilityPanel extends ConsumerStatefulWidget {
-  const AvailabilityPanel({required this.code, this.ownerId, super.key});
+  const AvailabilityPanel({
+    required this.code,
+    this.ownerId,
+    this.onSelected,
+    super.key,
+  });
   final String code;
   final String? ownerId;
+  final ValueChanged<String>? onSelected;
   @override
   ConsumerState<AvailabilityPanel> createState() => _AvailabilityPanelState();
 }
@@ -207,7 +213,7 @@ class _AvailabilityPanelState extends ConsumerState<AvailabilityPanel> {
               'Legend: available · full · blocked · past · lead time restricted. Availability is rechecked when an order is confirmed.',
             ),
             const Text(
-              'Order submission is not enabled yet. No orders are reserved by viewing dates.',
+              'Pending requests do not reserve capacity. Availability is checked again at submission and later confirmation.',
             ),
             Wrap(
               spacing: 6,
@@ -215,7 +221,12 @@ class _AvailabilityPanelState extends ConsumerState<AvailabilityPanel> {
               children: [
                 for (final day in days)
                   OutlinedButton(
-                    onPressed: () => setState(() => selected = day.date),
+                    onPressed: () {
+                      setState(() => selected = day.date);
+                      if (day.state == 'available') {
+                        widget.onSelected?.call(day.date);
+                      }
+                    },
                     child: Text('${day.date.substring(8)}: ${day.label}'),
                   ),
               ],

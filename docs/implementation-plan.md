@@ -1,5 +1,11 @@
 # Implementation plan
 
+## Current scope: Phase 5 implementation delivered (2026-10-29)
+
+The owner authorized Phase 5 after `ea5966f`. Four-step request builder, account/bakery drafts, server review/revalidation, atomic idempotent Pending submission, private references and customer/baker list/detail are implemented in migration 007 and the request feature. Seven migrations now match development; no reset. See [Phase 5 handoff](phase-5-handoff.md) for local, limited-live and blocked acceptance. The positive three-account workflow remains blocked; no native test is inferred from Chrome. **Stop before Phase 6.** All earlier current-scope/stop-before-5 wording below is historical.
+
+Phase 6 must evolve Pending-only constraints into authoritative quotation/agreement/confirmation/lifecycle transactions, link capacity allocations to real orders, recheck current quote/business/date/capacity/allowance, and run true concurrent last-slot/idempotency tests. Phase 5 does not reserve capacity or implement these actions. Preserve immutable initial snapshots and private attachment membership when extending the schema.
+
 Phase 4 implementation update: availability configuration/calendar, server date/status contract, blocking/conflict handling, customer public availability, saved/recent access and browser link-through-login routing are now implemented. Positive cross-account/live Chrome acceptance requires dedicated baker accounts; local/model checks are separately recorded. Phase 5 must integrate real order occupancy transactionally; no order workflow was introduced here. See [handoff](phase-4-handoff.md). Scheduling semantics are provisional decisions 39–43, not previously approved policy.
 
 Current override (2026-10-28): owner authorized laptop verification followed by Phase 4 once exact blockers are documented, and deferred native installation/acceptance. Customer discovery is implemented and deployed; availability semantics and full Phase 4 completion remain pending. See [Phase 4 continuation](phase-4-handoff.md). Earlier phase-stop statements below describe historical gates and are superseded by this instruction. Do not begin Phase 5.

@@ -1,5 +1,13 @@
 # BakeQuote architecture contract
 
+## Phase 5 extension (2026-10-29)
+
+The [request feature](../lib/features/requests/) uses pure typed domain models/contracts, Supabase/SharedPreferences mapping in data, Riverpod workflow coordination in application, and forms/list/detail widgets in presentation. Its public entry point is `requests.dart`; discovery opens the composed router route rather than importing private request data. Widgets pick input/files but do not coordinate database writes. Application providers own pagination, private signed-image URLs and identity-scoped repository injection. Captured-session checks and operation epochs prevent stale results/caches after navigation or account changes.
+
+`open/save/review/submit_request` are invariant-sensitive server transactions, not widget write sequences. Submit locks draft/business and atomically freezes the request, estimate version 1, event and attachments. No Edge Function is needed because Phase 5 introduces no external integration or privileged secret. Ordinary bounded list/detail reads use RLS. Errors map SQLSTATE to sanitized recovery instructions. No automatic write retries; user retry reuses the draft/review token. SharedPreferences partitions draft and cleanup intent by project/user/business and is not claimed encrypted. See [handoff](phase-5-handoff.md) and [schema](database-and-storage.md).
+
+Earlier baseline descriptions below remain architectural history. The authorized scope is now completed Phase 5 implementation, stopping before Phase 6; multi-account/native acceptance gates remain open.
+
 Status: Phase 3A baseline, 2026-10-26. This describes the present Flutter implementation and the boundaries required for later features. A passing build does not prove that every boundary is satisfied; the audit records the remaining work.
 
 ## Runtime and composition

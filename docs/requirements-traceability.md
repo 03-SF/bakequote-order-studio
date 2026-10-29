@@ -1,5 +1,20 @@
 # Requirements traceability
 
+## Phase 5 current evidence (2026-10-29)
+
+| ID | Requirement | Implementation/evidence | Remaining acceptance |
+| --- | --- | --- | --- |
+| P5-01 | Four-step builder/customization/contact/fulfilment | Request presentation/controller/domain; Back and narrow 200% text test | Positive live Chrome journey requires active baker fixture |
+| P5-02 | Persistent isolated drafts and restoration | Server draft revision + per-project/account/bakery local cache; restart/isolation tests | Native storage/device restart deferred |
+| P5-03 | Authoritative estimate/current availability | Review+submit RPC, integer paisa, changed-price/date rejection; SQL PKR 4,100 fixture | Real two-party catalog/date-change acceptance blocked |
+| P5-04 | Atomic/idempotent Pending creation | Migration 007; duplicate token/different token, injected late failure/rollback, immutable snapshots tested | True concurrent hosted transactions untested |
+| P5-05 | Private reference images | Registered paths/member Storage policies, ownership/count/retirement checks; failure/retry UI tests | Positive live upload/reload and unrelated actual baker access blocked |
+| P5-06 | Customer/baker request views | RLS list/detail/quote/event; 20-row pages; no Phase 6 actions | Limited live customer endpoint/Chrome empty state only |
+| P5-07 | Uncertain outcome/session/network recovery | Persist uncertain marker, freeze input, status check/exact retry; duplicate/late-account tests | Real interrupted submission with owned bakery blocked |
+| P5-08 | Deployment and handoff | Seven migration versions match; 67 Flutter, 10 setup, 114 modeled SQL, 20 limited live checks | See final Chrome/build matrix; native and full cross-account explicitly deferred/blocked |
+
+The [Phase 5 handoff](phase-5-handoff.md) and [integration table](integration-verification.md) supersede older planned/missing-environment statements below. Feature implementation is separate from complete acceptance. Phase 6 has not started.
+
 Phase 4 latest: baker calendar/settings/blocking and customer bakery/menu/pricing/fulfilment/availability/saved/recent/link navigation are implemented. Evidence: 57 Flutter tests, 81 modeled SQL checks, nine limited new live endpoints; real two-baker Chrome/permissions acceptance remains blocked. Availability uses date-only business-timezone semantics and an inaccessible future allocation contract; no live orders or fake occupancy. Earlier availability-planned statements below are superseded by [Phase 4 handoff](phase-4-handoff.md).
 
 Latest evidence (2026-10-28): see [integration verification](integration-verification.md) and [Phase 4 continuation](phase-4-handoff.md). Older unconfigured/unlinked environment notes below are historical. Native acceptance is explicitly deferred. C01 public profiles/menus and saved bakeries now have implementation and modeled tests; full availability and native shared-link acceptance remain pending.
