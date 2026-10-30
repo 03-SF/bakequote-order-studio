@@ -56,4 +56,54 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.reschedule_order_local(uuid,bigint,date,text,uuid) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.reschedule_order_local(uuid,bigint,date,text,uuid) TO authenticated;
+
+REVOKE EXECUTE ON FUNCTION public.request_order_cancellation(uuid,bigint), public.resolve_order_cancellation(uuid,bigint,boolean) FROM PUBLIC,anon,authenticated;
+CREATE FUNCTION public.cancellation_command(p_order_id uuid,p_expected_version bigint,p_action text,p_operation_id uuid)
+RETURNS public.order_requests LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
+DECLARE r public.order_requests; v_owner uuid; c public.order_cancellation_requests;
+ previous public.order_operations; input jsonb:=jsonb_build_object('expected_version',p_expected_version,'action',p_action);
+BEGIN
+ SELECT * INTO r FROM public.order_requests WHERE id=p_order_id FOR UPDATE;
+ SELECT b.owner_id INTO v_owner FROM public.businesses b WHERE b.id=r.business_id;
+ IF r.id IS NULL OR auth.uid() IS NULL OR (auth.uid() IS DISTINCT FROM r.customer_id AND auth.uid() IS DISTINCT FROM v_owner)
+  THEN RAISE EXCEPTION 'Access denied' USING ERRCODE='42501'; END IF;
+ IF p_operation_id IS NULL THEN RAISE EXCEPTION 'Operation ID required' USING ERRCODE='22023'; END IF;
+ SELECT * INTO previous FROM public.order_operations WHERE operation_id=p_operation_id;
+ IF FOUND THEN
+  IF previous.order_id IS DISTINCT FROM r.id OR previous.actor_id IS DISTINCT FROM auth.uid()
+   OR previous.command IS DISTINCT FROM 'cancellation' OR previous.operation_input IS DISTINCT FROM input
+   THEN RAISE EXCEPTION 'Operation ID conflict' USING ERRCODE='40001'; END IF;
+  RETURN r;
+ END IF;
+ IF p_expected_version IS NULL OR p_expected_version<>r.version THEN RAISE EXCEPTION 'Version conflict' USING ERRCODE='40001'; END IF;
+ SELECT * INTO c FROM public.order_cancellation_requests WHERE order_id=r.id FOR UPDATE;
+ IF p_action='request' THEN
+  IF auth.uid() IS DISTINCT FROM r.customer_id THEN RAISE EXCEPTION 'Access denied' USING ERRCODE='42501'; END IF;
+  IF r.status NOT IN ('confirmed','baking') OR c.order_id IS NOT NULL THEN RAISE EXCEPTION 'Cancellation unavailable' USING ERRCODE='23514'; END IF;
+  INSERT INTO public.order_cancellation_requests(order_id,reason,requested_by) VALUES(r.id,'Customer requested cancellation',auth.uid());
+ ELSIF p_action IN ('approve','reject') THEN
+  IF auth.uid() IS DISTINCT FROM v_owner THEN RAISE EXCEPTION 'Access denied' USING ERRCODE='42501'; END IF;
+  IF c.status IS DISTINCT FROM 'open' OR r.status NOT IN ('confirmed','baking') THEN RAISE EXCEPTION 'Cancellation unavailable' USING ERRCODE='23514'; END IF;
+  UPDATE public.order_cancellation_requests SET status=CASE WHEN p_action='approve' THEN 'accepted' ELSE 'rejected' END,resolved_by=auth.uid(),resolved_at=now() WHERE order_id=r.id;
+  IF p_action='approve' THEN
+   UPDATE public.capacity_allocations SET status='cancelled' WHERE order_id=r.id AND status IN ('confirmed','baking');
+   IF NOT FOUND THEN RAISE EXCEPTION 'Allocation unavailable' USING ERRCODE='23514'; END IF;
+   r.status:='cancelled';
+  END IF;
+ ELSE RAISE EXCEPTION 'Invalid action' USING ERRCODE='22023'; END IF;
+ UPDATE public.order_requests SET status=r.status,version=version+1 WHERE id=r.id RETURNING * INTO r;
+ INSERT INTO public.order_events(order_id,kind,actor_id) VALUES(r.id,CASE p_action WHEN 'request' THEN 'cancellation_requested' WHEN 'approve' THEN 'cancelled' ELSE 'cancellation_rejected' END,auth.uid());
+ INSERT INTO public.order_operations(operation_id,order_id,command,result_status,actor_id,operation_input) VALUES(p_operation_id,r.id,'cancellation',r.status,auth.uid(),input);
+ RETURN r;
+END $$;
+REVOKE ALL ON FUNCTION public.cancellation_command(uuid,bigint,text,uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.cancellation_command(uuid,bigint,text,uuid) TO authenticated;
+CREATE FUNCTION public.order_schedule_view(p_order_id uuid) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
+ SELECT jsonb_build_object('date',r.snapshot->>'service_date','time',to_char(r.due_at AT TIME ZONE s.timezone,'HH24:MI'),'timezone',s.timezone)
+ FROM public.order_requests r JOIN public.availability_settings s ON s.business_id=r.business_id
+ WHERE r.id=p_order_id AND public.request_participant(r.id)
+$$;
+REVOKE ALL ON FUNCTION public.order_schedule_view(uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.order_schedule_view(uuid) TO authenticated;
 COMMIT;

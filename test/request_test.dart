@@ -172,6 +172,58 @@ ProviderContainer harness(FakeRequests repo) => ProviderContainer(
   ],
 );
 void main() {
+  testWidgets(
+    'Baker sees the saved bakery-local schedule and reschedule action',
+    (tester) async {
+      const record = RequestRecord(
+        'order',
+        'BQ-1',
+        'confirmed',
+        '2026-10-29',
+        'Bakery',
+        'Cake',
+        input,
+        '1 kg',
+        [],
+        estimate,
+        'Asia/Karachi',
+        '',
+        '',
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authControllerProvider.overrideWith(BakerAuthStub.new),
+            orderQuotesProvider.overrideWith((ref, id) async => []),
+            orderScheduleProvider.overrideWith(
+              (ref, id) async => {
+                'date': '2027-01-01',
+                'time': '15:30',
+                'timezone': 'Asia/Karachi',
+              },
+            ),
+            orderCancellationProvider.overrideWith((ref, id) async => null),
+          ],
+          child: const MaterialApp(
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: OrderActionPanel(orderId: 'order', record: record),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Saved schedule: 2027-01-01 15:30 (Asia/Karachi)'),
+        findsOneWidget,
+      );
+      expect(
+        find.widgetWithText(OutlinedButton, 'Reschedule order'),
+        findsOneWidget,
+      );
+    },
+  );
   testWidgets('Baker can mark Baking and legacy Decorating orders Ready', (
     tester,
   ) async {

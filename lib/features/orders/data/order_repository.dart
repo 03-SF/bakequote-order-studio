@@ -135,12 +135,46 @@ class OrderRepository {
 
   String newOperationId() => const Uuid().v4();
 
-  Future<Map<String, dynamic>> requestCancellation({
-    required String orderId,
-    required int expectedVersion,
-  }) async => await _rpc<Map<String, dynamic>>('request_order_cancellation', {
-    'p_order_id': orderId,
-    'p_expected_version': expectedVersion,
+  Future<Map<String, dynamic>> schedule(String id) async =>
+      await _rpc<Map<String, dynamic>>('order_schedule_view', {
+        'p_order_id': id,
+      });
+
+  Future<String?> cancellationStatus(String id) async {
+    _session();
+    final row = await client
+        .from('order_cancellation_requests')
+        .select('status')
+        .eq('order_id', id)
+        .maybeSingle();
+    _session();
+    return row?['status'] as String?;
+  }
+
+  Future<Map<String, dynamic>> reschedule({
+    required String id,
+    required int version,
+    required String date,
+    required String time,
+    required String operationId,
+  }) async => await _rpc<Map<String, dynamic>>('reschedule_order_local', {
+    'p_order_id': id,
+    'p_expected_version': version,
+    'p_service_date': date,
+    'p_local_time': time,
+    'p_operation_id': operationId,
+  });
+
+  Future<Map<String, dynamic>> cancelCommand({
+    required String id,
+    required int version,
+    required String action,
+    required String operationId,
+  }) async => await _rpc<Map<String, dynamic>>('cancellation_command', {
+    'p_order_id': id,
+    'p_expected_version': version,
+    'p_action': action,
+    'p_operation_id': operationId,
   });
 }
 
@@ -161,5 +195,19 @@ final orderQuotesProvider = FutureProvider.autoDispose
     .family<List<Map<String, dynamic>>, String>(
       (ref, orderId) async =>
           (await ref.watch(orderRepositoryProvider.future)).quotes(orderId),
+      retry: (_, _) => null,
+    );
+
+final orderScheduleProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>, String>(
+      (ref, id) async =>
+          (await ref.watch(orderRepositoryProvider.future)).schedule(id),
+      retry: (_, _) => null,
+    );
+final orderCancellationProvider = FutureProvider.autoDispose
+    .family<String?, String>(
+      (ref, id) async => (await ref.watch(
+        orderRepositoryProvider.future,
+      )).cancellationStatus(id),
       retry: (_, _) => null,
     );

@@ -1,5 +1,13 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Latest cancellation-transition guard
+
+Migration `20261030000200` is deployed after a dry run and prevents production transitions while a cancellation is open. All 16 local/remote migrations match; the modeled suite passes 160 checks. No actual cross-account, concurrency or Chrome journey acceptance was executed. Earlier 15-migration counts below are historical.
+
+## Rescheduling and cancellation continuation
+
+The rescheduling/cancellation migration was deployed to the linked development project without reset; 15 local and remote versions match. The read-only historical audit returned zero allocated orders. UI and repositories now use the new rescheduling and cancellation commands, show the saved bakery-local schedule, require an explicit rescheduling confirmation and retain the operation for same-panel retries. The modeled PostgreSQL suite passes 159 checks; final focused request widgets pass 14 tests. Real concurrent database requests, account-switch/restart retry recovery, dedicated two-baker backend checks and the Chrome rescheduling/cancellation journey remain unverified. Previously saved baker accounts were placeholders and were not retried. No historical records were repaired. Native/device acceptance remains deferred and phases 5–6 are not accepted.
+
 ## Rescheduling transaction preparation
 
 The owner selected explicit baker confirmation of a new date and time, prefilled from the current bakery-local time. A local-only forward migration implements the atomic backend transaction and retry key and revokes the unsafe prior RPC when deployed; 151 modeled PostgreSQL checks pass. This is not an end-to-end fix: the migration has not been deployed; the UI, cancellation retry fixes, full-capacity and real concurrency checks, historical hosted audit and Chrome/live acceptance remain incomplete. Do not use the deployed legacy rescheduling function. No historical records or hosted data were changed.

@@ -1,5 +1,7 @@
 # Requirements traceability
 
+Phase 6 continuation: the development project now has the new rescheduling and cancellation RPCs, and the Flutter order actions call them. Local/model checks cover selected bakery-local time, capacity rollback and cancellation retries; 15 migration versions match remotely. True hosted concurrency, fresh-session retry, participant isolation and Chrome acceptance remain outstanding. Historical allocation audit returned zero rows.
+
 Phase 6 continuation: Pending withdrawal remains visible after quote agreement, covered by a focused widget regression. Rescheduling remains incomplete: the existing backend changes service date and allocation but leaves the due timestamp unchanged. Hosted acceptance, true concurrency and correct-baker/cross-account checks remain blocked by missing verified test accounts.
 
 Current audit: first-time onboarding now requires an explicit Customer or Baker selection before saving; existing profiles and dual-role policy are unchanged. Local widget regression covers missing selection and choosing Baker; live onboarding and returning-user acceptance remain outstanding. See [phase completion matrix](phase-completion-matrix.md) for all phase statuses and unresolved work.

@@ -851,6 +851,7 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
   bool busy = false;
   String? message;
   String? operationId;
+  Future<void> Function(OrderRepository)? retryAction;
 
   @override
   void dispose() {
@@ -875,9 +876,18 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
       ref.invalidate(requestDetailProvider(widget.orderId));
       ref.invalidate(requestsProvider);
       ref.invalidate(orderQuotesProvider(widget.orderId));
+      ref.invalidate(orderScheduleProvider(widget.orderId));
+      ref.invalidate(orderCancellationProvider(widget.orderId));
+      ref.invalidate(requestEventsProvider(widget.orderId));
+      retryAction = null;
       setState(() => message = 'Saved. Reloading the current order.');
       return true;
     } catch (error) {
+      final definite =
+          error is OrderCommandFailure &&
+          {'40001', '23514', '42501', '22023', 'SESSION'}.contains(error.code);
+      retryAction = definite ? null : action;
+      if (definite) operationId = null;
       if (mounted) {
         setState(() {
           message = error is OrderCommandFailure
@@ -946,15 +956,97 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
     if (success) operationId = null;
   }
 
+  Future<void> cancellation(String action) async {
+    final version = widget.record.version;
+    final key = operationId ??= const Uuid().v4();
+    final success = await run(
+      (repo) => repo.cancelCommand(
+        id: widget.orderId,
+        version: version,
+        action: action,
+        operationId: key,
+      ),
+    );
+    if (success) operationId = null;
+  }
+
+  Future<void> reschedule(Map<String, dynamic> schedule) async {
+    final currentDate = DateTime.tryParse(schedule['date'] as String? ?? '');
+    final currentTime = (schedule['time'] as String? ?? '').split(':');
+    if (currentDate == null || currentTime.length != 2) {
+      setState(
+        () => message =
+            'The saved due time is unavailable. Reload the order or contact support.',
+      );
+      return;
+    }
+    final date = await showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: int.parse(currentTime[0]),
+        minute: int.parse(currentTime[1]),
+      ),
+    );
+    if (time == null || !mounted) return;
+    final day =
+        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final clock =
+        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm reschedule'),
+        content: Text(
+          'Move this order to $day at $clock in ${schedule['timezone']}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Back'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final version = widget.record.version;
+    final key = operationId ??= const Uuid().v4();
+    final success = await run(
+      (repo) => repo.reschedule(
+        id: widget.orderId,
+        version: version,
+        date: day,
+        time: clock,
+        operationId: key,
+      ),
+    );
+    if (success) operationId = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final r = widget.record;
     final pending = r.status == 'pending';
+    final locked = busy || retryAction != null;
     final confirmed = r.status == 'confirmed';
     final baking = r.status == 'baking';
     final decorating = r.status == 'decorating';
     final ready = r.status == 'ready';
     final quotes = ref.watch(orderQuotesProvider(widget.orderId));
+    final schedule = ref.watch(orderScheduleProvider(widget.orderId));
+    final cancellationState = ref.watch(
+      orderCancellationProvider(widget.orderId),
+    );
     final latest = quotes.asData?.value
         .where((q) => q['version'] == r.currentQuoteVersion)
         .firstOrNull;
@@ -964,6 +1056,52 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        schedule.when(
+          data: (value) => Text(
+            'Saved schedule: ${value['date']} ${value['time'] ?? 'time not set'} (${value['timezone']})',
+          ),
+          loading: () => const LinearProgressIndicator(),
+          error: (_, _) => TextButton(
+            onPressed: () =>
+                ref.invalidate(orderScheduleProvider(widget.orderId)),
+            child: const Text('Could not load schedule. Retry'),
+          ),
+        ),
+        if (isBaker &&
+            (confirmed || baking || decorating || ready) &&
+            schedule.asData != null)
+          OutlinedButton(
+            onPressed: locked ? null : () => reschedule(schedule.asData!.value),
+            child: const Text('Reschedule order'),
+          ),
+        cancellationState.when(
+          data: (status) => Column(
+            children: [
+              if (status != null) Text('Cancellation: $status'),
+              if (!isBaker && (confirmed || baking) && status == null)
+                OutlinedButton(
+                  onPressed: locked ? null : () => cancellation('request'),
+                  child: const Text('Request cancellation'),
+                ),
+              if (isBaker && status == 'open') ...[
+                FilledButton(
+                  onPressed: locked ? null : () => cancellation('approve'),
+                  child: const Text('Approve cancellation'),
+                ),
+                OutlinedButton(
+                  onPressed: locked ? null : () => cancellation('reject'),
+                  child: const Text('Reject cancellation'),
+                ),
+              ],
+            ],
+          ),
+          loading: () => const LinearProgressIndicator(),
+          error: (_, _) => TextButton(
+            onPressed: () =>
+                ref.invalidate(orderCancellationProvider(widget.orderId)),
+            child: const Text('Could not load cancellation status. Retry'),
+          ),
+        ),
         quotes.when(
           loading: () => const LinearProgressIndicator(),
           error: (_, _) => TextButton(
@@ -988,6 +1126,16 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Semantics(liveRegion: true, child: Text(message!)),
           ),
+        if (retryAction != null)
+          OutlinedButton(
+            onPressed: busy
+                ? null
+                : () async {
+                    final action = retryAction!;
+                    if (await run(action)) operationId = null;
+                  },
+            child: const Text('Retry the same action'),
+          ),
         if (isBaker && pending) ...[
           TextFormField(
             controller: amount,
@@ -1005,11 +1153,11 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
             maxLength: 1000,
           ),
           FilledButton(
-            onPressed: busy ? null : revise,
+            onPressed: locked ? null : revise,
             child: const Text('Issue exact quote'),
           ),
           FilledButton.tonal(
-            onPressed: busy ? null : () => transition(OrderStatus.declined),
+            onPressed: locked ? null : () => transition(OrderStatus.declined),
             child: const Text('Decline request'),
           ),
         ],
@@ -1026,7 +1174,7 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
             maxLength: 1000,
           ),
           FilledButton(
-            onPressed: busy || !canReview
+            onPressed: locked || !canReview
                 ? null
                 : () => run(
                     (repo) => repo.recordAgreement(
@@ -1040,7 +1188,7 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
         ],
         if (!isBaker && pending)
           OutlinedButton(
-            onPressed: busy
+            onPressed: locked
                 ? null
                 : () async {
                     final success = await run(
@@ -1059,22 +1207,22 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
           Text('Choose a due time in the bakery timezone: ${r.timezone}.'),
         if (isBaker && pending && r.agreedQuoteVersion == r.currentQuoteVersion)
           FilledButton(
-            onPressed: busy ? null : confirmOrder,
+            onPressed: locked ? null : confirmOrder,
             child: const Text('Confirm production order'),
           ),
         if (isBaker && confirmed)
           FilledButton(
-            onPressed: busy ? null : () => transition(OrderStatus.baking),
+            onPressed: locked ? null : () => transition(OrderStatus.baking),
             child: const Text('Start baking'),
           ),
         if (isBaker && (baking || decorating))
           FilledButton(
-            onPressed: busy ? null : () => transition(OrderStatus.ready),
+            onPressed: locked ? null : () => transition(OrderStatus.ready),
             child: const Text('Mark ready'),
           ),
         if (isBaker && ready)
           FilledButton(
-            onPressed: busy ? null : () => transition(OrderStatus.delivered),
+            onPressed: locked ? null : () => transition(OrderStatus.delivered),
             child: const Text('Mark delivered'),
           ),
       ],

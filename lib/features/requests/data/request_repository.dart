@@ -321,14 +321,20 @@ class SupabaseRequestRepository implements RequestRepository {
         .limit(50);
     final progression = await client
         .from('order_events')
-        .select('kind,created_at')
+        .select('kind,created_at,details')
         .eq('order_id', id)
         .order('created_at')
         .limit(50);
     final rows = [
-      for (final e in requested) (e['kind'], e['created_at']),
-      for (final e in progression) (e['kind'], e['created_at']),
+      for (final e in requested) (e['kind'], e['created_at'], null),
+      for (final e in progression) (e['kind'], e['created_at'], e['details']),
     ]..sort((a, b) => a.$2.toString().compareTo(b.$2.toString()));
-    return [for (final e in rows) '${e.$1} · ${e.$2}'];
+    return [
+      for (final e in rows)
+        if (e.$1 == 'rescheduled' && e.$3 is Map)
+          'Rescheduled: ${(e.$3 as Map)['old_date']} ${(e.$3 as Map)['old_due_at']} → ${(e.$3 as Map)['new_date']} ${(e.$3 as Map)['new_due_at']} (${(e.$3 as Map)['timezone']}) · ${e.$2}'
+        else
+          '${e.$1} · ${e.$2}',
+    ];
   });
 }

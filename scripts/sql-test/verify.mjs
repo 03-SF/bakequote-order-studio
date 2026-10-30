@@ -388,6 +388,30 @@ await as('authenticated',a,async()=>{
 check(await scalar('SELECT service_date::text=$2 FROM public.capacity_allocations WHERE order_id=$1',[manual.id,targetDay]),'reschedule moves capacity allocation');
 const scheduleEvent=await scalar("SELECT details FROM public.order_events WHERE order_id=$1 AND kind='rescheduled'",[manual.id]);
 check(scheduleEvent.old_date===await scalar('SELECT $1::date::text',[day]) && scheduleEvent.new_date===targetDay && 'old_due_at' in scheduleEvent && scheduleEvent.new_due_at!=null,'reschedule history retains old and new schedule');
+await db.query("UPDATE public.order_requests SET status='confirmed' WHERE id=$1",[order]);
+await db.query("UPDATE public.capacity_allocations SET status='confirmed' WHERE order_id=$1",[order]);
+const cancelVersion=await scalar('SELECT version FROM public.order_requests WHERE id=$1',[order]);
+await db.query('UPDATE public.availability_settings SET daily_capacity=1 WHERE business_id=$1',[businessA]);
+const fullBefore=await scalar("SELECT jsonb_build_object('snapshot',snapshot,'due',due_at,'version',version) FROM public.order_requests WHERE id=$1",[order]);
+await as('authenticated',a,()=>denied(()=>db.query("SELECT public.reschedule_order_local($1,$2,$3,'15:30',gen_random_uuid())",[order,cancelVersion,targetDay]),'full destination rejected','23514'));
+check(JSON.stringify(await scalar("SELECT jsonb_build_object('snapshot',snapshot,'due',due_at,'version',version) FROM public.order_requests WHERE id=$1",[order]))===JSON.stringify(fullBefore),'full destination preserves original order');
+check(await scalar('SELECT service_date=$2::date FROM public.capacity_allocations WHERE order_id=$1',[order,day]),'full destination preserves original allocation');
+const cancelOp='a0000000-0000-4000-8000-000000000091';
+const approveOp='a0000000-0000-4000-8000-000000000092';
+await as('authenticated',c,async()=>{
+ await db.query("SELECT public.cancellation_command($1,$2,'request',$3)",[order,cancelVersion,cancelOp]);
+ await db.query("SELECT public.cancellation_command($1,$2,'request',$3)",[order,cancelVersion,cancelOp]);
+ await denied(()=>db.query("SELECT public.cancellation_command($1,$2,'request',gen_random_uuid())",[order,cancelVersion+1]),'open cancellation cannot be duplicated','23514');
+});
+await as('authenticated',b,()=>denied(()=>db.query("SELECT public.cancellation_command($1,$2,'approve',$3)",[order,cancelVersion+1,approveOp]),'unrelated baker cannot approve cancellation','42501'));
+await as('authenticated',a,async()=>{
+ await denied(()=>db.query("SELECT public.transition_order($1,$2,'baking',gen_random_uuid())",[order,cancelVersion+1]),'open cancellation blocks production transition','23514');
+ await db.query("SELECT public.cancellation_command($1,$2,'approve',$3)",[order,cancelVersion+1,approveOp]);
+ await db.query("SELECT public.cancellation_command($1,$2,'approve',$3)",[order,cancelVersion+1,approveOp]);
+ await denied(()=>db.query("SELECT public.cancellation_command($1,$2,'reject',$3)",[order,cancelVersion+1,approveOp]),'changed cancellation retry rejected','40001');
+});
+check(await scalar("SELECT count(*)::int FROM public.order_events WHERE order_id=$1 AND kind='cancelled'",[order])===1,'cancellation retry creates one event');
+check(await scalar("SELECT status FROM public.capacity_allocations WHERE order_id=$1",[order])==='cancelled','approved cancellation releases allocation');
 const auditSql=await readFile(new URL('./audit_reschedule_consistency.sql',import.meta.url),'utf8');
 const audit=(await db.query(auditSql)).rows[0];
 check(Number(audit.allocated_orders)>=2 && Number(audit.allocation_date_mismatch)===0,'read-only rescheduling consistency audit runs on modeled data');
