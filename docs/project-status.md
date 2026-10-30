@@ -1,5 +1,9 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Rescheduling transaction preparation
+
+The owner selected explicit baker confirmation of a new date and time, prefilled from the current bakery-local time. A local-only forward migration implements the atomic backend transaction and retry key and revokes the unsafe prior RPC when deployed; 151 modeled PostgreSQL checks pass. This is not an end-to-end fix: the migration has not been deployed; the UI, cancellation retry fixes, full-capacity and real concurrency checks, historical hosted audit and Chrome/live acceptance remain incomplete. Do not use the deployed legacy rescheduling function. No historical records or hosted data were changed.
+
 ## Rescheduling investigation continuation
 
 A read-only aggregate audit query is prepared in `scripts/sql-test/audit_reschedule_consistency.sql` and exercised in the 142-check modeled SQL suite; it has not been run against hosted data. No existing records were modified. The due-time policy decision is pending, and the rescheduling correction, cancellation UI/idempotency and hosted multi-account acceptance are still incomplete.

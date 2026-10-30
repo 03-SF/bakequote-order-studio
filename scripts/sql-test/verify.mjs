@@ -369,6 +369,25 @@ await as('authenticated',a,async()=>{
  check(legacy.status==='ready','legacy Decorating advances to Ready');
 });
 check(await scalar('SELECT count(*)::int FROM public.order_events WHERE order_id=$1',[manual.id])===legacyEvents+1,'legacy history is preserved and a new event is added');
+const targetDay=await scalar('SELECT ($1::date+3)::text',[day]);
+const blockedDay=await scalar('SELECT ($1::date+4)::text',[day]);
+const rescheduleOp='a0000000-0000-4000-8000-000000000099';
+const beforeSchedule=await scalar('SELECT jsonb_build_object(\'snapshot\',snapshot,\'due\',due_at,\'version\',version) FROM public.order_requests WHERE id=$1',[manual.id]);
+await db.query('INSERT INTO public.blocked_dates(business_id,service_date) VALUES($1,$2)',[businessA,blockedDay]);
+await as('authenticated',b,()=>denied(()=>db.query("SELECT public.reschedule_order_local($1,2,$2,'15:30',$3)",[manual.id,targetDay,rescheduleOp]),'other baker cannot reschedule','42501'));
+await as('authenticated',a,async()=>{
+ await denied(()=>db.query("SELECT public.reschedule_order_local($1,2,$2,'15:30',$3)",[manual.id,blockedDay,rescheduleOp]),'blocked reschedule rejected','23514');
+ check(JSON.stringify(await scalar('SELECT jsonb_build_object(\'snapshot\',snapshot,\'due\',due_at,\'version\',version) FROM public.order_requests WHERE id=$1',[manual.id]))===JSON.stringify(beforeSchedule),'blocked reschedule leaves order unchanged');
+ const moved=await scalar("SELECT to_jsonb(public.reschedule_order_local($1,2,$2,'15:30',$3))",[manual.id,targetDay,rescheduleOp]);
+ check(moved.snapshot.service_date===targetDay,'reschedule changes service date');
+ check(await scalar("SELECT (due_at AT TIME ZONE 'Asia/Karachi')=($2::date+time '15:30') FROM public.order_requests WHERE id=$1",[manual.id,targetDay]),'reschedule stores bakery-local due time');
+ await db.query("SELECT public.reschedule_order_local($1,2,$2,'15:30',$3)",[manual.id,targetDay,rescheduleOp]);
+ check(await scalar("SELECT count(*)::int FROM public.order_events WHERE order_id=$1 AND kind='rescheduled'",[manual.id])===1,'reschedule retry creates one event');
+ await denied(()=>db.query("SELECT public.reschedule_order_local($1,2,$2,'16:30',$3)",[manual.id,targetDay,rescheduleOp]),'changed reschedule retry rejected','40001');
+});
+check(await scalar('SELECT service_date::text=$2 FROM public.capacity_allocations WHERE order_id=$1',[manual.id,targetDay]),'reschedule moves capacity allocation');
+const scheduleEvent=await scalar("SELECT details FROM public.order_events WHERE order_id=$1 AND kind='rescheduled'",[manual.id]);
+check(scheduleEvent.old_date===await scalar('SELECT $1::date::text',[day]) && scheduleEvent.new_date===targetDay && 'old_due_at' in scheduleEvent && scheduleEvent.new_due_at!=null,'reschedule history retains old and new schedule');
 const auditSql=await readFile(new URL('./audit_reschedule_consistency.sql',import.meta.url),'utf8');
 const audit=(await db.query(auditSql)).rows[0];
 check(Number(audit.allocated_orders)>=2 && Number(audit.allocation_date_mismatch)===0,'read-only rescheduling consistency audit runs on modeled data');
