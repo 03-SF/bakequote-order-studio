@@ -1037,6 +1037,8 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
                   ),
             child: const Text('Acknowledge exact quote'),
           ),
+        ],
+        if (!isBaker && pending)
           OutlinedButton(
             onPressed: busy
                 ? null
@@ -1053,7 +1055,6 @@ class _OrderActionPanelState extends ConsumerState<OrderActionPanel> {
                   },
             child: const Text('Withdraw request'),
           ),
-        ],
         if (isBaker && pending && r.agreedQuoteVersion == r.currentQuoteVersion)
           Text('Choose a due time in the bakery timezone: ${r.timezone}.'),
         if (isBaker && pending && r.agreedQuoteVersion == r.currentQuoteVersion)

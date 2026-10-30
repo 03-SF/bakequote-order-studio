@@ -1,5 +1,9 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Phase 5–6 continuation
+
+Fixed a missing Pending withdrawal action after customer agreement. Thirteen focused request tests, 75 full Flutter tests, 16 Python setup tests, 141 modeled SQL checks, formatting and analysis passed; the live-configured Web release and Android debug APK built. No APK installation, hosted acceptance or browser workflow acceptance was performed. An open rescheduling integrity defect was identified: changing the service date does not update the order due timestamp. Phase 6 is not complete and existing data/settings were not changed. Verified dedicated Customer/Baker A/B credentials and bakery are still required for real acceptance. Native acceptance remains deferred.
+
 ## Verification callback investigation (2026-10-30)
 
 Missing PKCE verifier errors now explain browser-state recovery, and profile/database, Auth and network errors have distinct sanitized feedback. The user-reported live failure has not been reproduced, so its precise root cause and confirmation status remain unknown. Focused auth suite: 26 passed; full Flutter suite: 74 passed; formatting and analysis passed; live-configured Web release and Android debug builds passed. No email was resent, no live callback acceptance or native installation was performed. The existing listener on port 7357 predates this Web build; restart it before using the updated code. See [integration verification](integration-verification.md) for the specific evidence and blockers.

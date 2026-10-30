@@ -1,5 +1,7 @@
 # Requirements traceability
 
+Phase 6 continuation: Pending withdrawal remains visible after quote agreement, covered by a focused widget regression. Rescheduling remains incomplete: the existing backend changes service date and allocation but leaves the due timestamp unchanged. Hosted acceptance, true concurrency and correct-baker/cross-account checks remain blocked by missing verified test accounts.
+
 Current audit: first-time onboarding now requires an explicit Customer or Baker selection before saving; existing profiles and dual-role policy are unchanged. Local widget regression covers missing selection and choosing Baker; live onboarding and returning-user acceptance remain outstanding. See [phase completion matrix](phase-completion-matrix.md) for all phase statuses and unresolved work.
 
 Owner decision 54 restores the approved Confirmed → Baking → Ready → Delivered path. Migration 008 preserves existing Decorating rows/history, keeps their capacity allocated and allows Decorating → Ready. New transitions into Decorating are denied. Flutter domain/UI and modeled SQL regression tests cover both paths; real multi-account acceptance remains blocked. English-only and offline exclusion continue.

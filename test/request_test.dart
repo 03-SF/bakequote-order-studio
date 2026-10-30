@@ -266,6 +266,46 @@ void main() {
     );
     expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
   });
+  testWidgets('Customer can withdraw a pending request after agreement', (
+    tester,
+  ) async {
+    const record = RequestRecord(
+      'order',
+      'BQ-1',
+      'pending',
+      '2026-10-29',
+      'Bakery',
+      'Cake',
+      input,
+      '1 kg',
+      [],
+      estimate,
+      'Asia/Karachi',
+      '',
+      '',
+      currentQuoteVersion: 2,
+      agreedQuoteVersion: 2,
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(RequestAuthStub.new),
+          orderQuotesProvider.overrideWith((ref, id) async => []),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: OrderActionPanel(orderId: 'order', record: record),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.widgetWithText(OutlinedButton, 'Withdraw request'),
+      findsOneWidget,
+    );
+    expect(find.text('Acknowledge exact quote'), findsNothing);
+  });
   test(
     'Failed upload preserves input and offers retry without a fake attachment',
     () async {
