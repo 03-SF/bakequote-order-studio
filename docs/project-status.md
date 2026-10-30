@@ -1,5 +1,9 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Rescheduling investigation continuation
+
+A read-only aggregate audit query is prepared in `scripts/sql-test/audit_reschedule_consistency.sql` and exercised in the 142-check modeled SQL suite; it has not been run against hosted data. No existing records were modified. The due-time policy decision is pending, and the rescheduling correction, cancellation UI/idempotency and hosted multi-account acceptance are still incomplete.
+
 ## Phase 5–6 continuation
 
 Fixed a missing Pending withdrawal action after customer agreement. Thirteen focused request tests, 75 full Flutter tests, 16 Python setup tests, 141 modeled SQL checks, formatting and analysis passed; the live-configured Web release and Android debug APK built. No APK installation, hosted acceptance or browser workflow acceptance was performed. An open rescheduling integrity defect was identified: changing the service date does not update the order due timestamp. Phase 6 is not complete and existing data/settings were not changed. Verified dedicated Customer/Baker A/B credentials and bakery are still required for real acceptance. Native acceptance remains deferred.

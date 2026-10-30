@@ -369,6 +369,9 @@ await as('authenticated',a,async()=>{
  check(legacy.status==='ready','legacy Decorating advances to Ready');
 });
 check(await scalar('SELECT count(*)::int FROM public.order_events WHERE order_id=$1',[manual.id])===legacyEvents+1,'legacy history is preserved and a new event is added');
+const auditSql=await readFile(new URL('./audit_reschedule_consistency.sql',import.meta.url),'utf8');
+const audit=(await db.query(auditSql)).rows[0];
+check(Number(audit.allocated_orders)>=2 && Number(audit.allocation_date_mismatch)===0,'read-only rescheduling consistency audit runs on modeled data');
 await as('authenticated',c,()=>denied(()=>db.query("SELECT public.request_account_deletion('DELETE')"),'unfinished account deletion unavailable','42501'));
 console.log(`${passed} local PostgreSQL runtime checks passed. Supabase services remain unverified.`);
 await db.close();
