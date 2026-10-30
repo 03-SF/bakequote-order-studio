@@ -1,5 +1,13 @@
 # Live Supabase integration verification
 
+## Signup callback investigation (2026-10-30)
+
+The owner reported receipt of a new verification email followed by generic connection advice. The specific live exception and whether that account was confirmed were not captured; no new email was sent and no full verification-link URL or secret was collected. Therefore the root cause and end-to-end callback acceptance remain **unverified**.
+
+Source inspection found a confirmed error-mapping defect: installed gotrue 2.27.3 throws a local `AuthException` without HTTP status or error code when the PKCE verifier is absent, before making an Auth token request; the previous mapper mislabeled it as a connection failure. The application now gives flow-specific recovery instructions and separately classifies authentication, PostgREST and network errors. A missing profile is reported rather than interpreted as an ordinary network error; the server trigger is intended to initialize profiles, and onboarding is driven by a null initial experience. `detectSessionInUri` is false, so the application performs one explicit exchange. Browser callback base is `http://localhost:7357/auth`; localhost and 127.0.0.1 use different origin storage. Dashboard Site URL/allowlist and the user's actual browser origin and session are not freshly verified in this investigation. Existing tests exercise stale invalid-session clearing, PKCE recovery routing and missing-verifier behavior; none proves this reported live incident had that cause.
+
+Next: use one controlled account, the same Chrome profile/origin for signup and the privately opened email link, and capture only the sanitized `Auth diagnostic` operation/category/status/code. Check Auth user confirmation and profile separately through authorized dashboard access. Do not repeat emails while rate-limited. Native callback acceptance remains deferred.
+
 ## Approved lifecycle and account preparation (2026-10-29)
 
 | Scenario | Actual result | Status |

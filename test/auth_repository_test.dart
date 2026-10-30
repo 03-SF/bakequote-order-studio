@@ -162,6 +162,41 @@ void main() {
     expect(requests, 0);
   });
   test(
+    'Missing signup verifier offers sign-in recovery without a token request',
+    () async {
+      await expectLater(
+        repository.completeCallback(
+          Uri.parse('dev.bakequote.mobile://auth/verify?code=valid'),
+          CallbackFlow.verify,
+        ),
+        throwsA(
+          isA<UserFacingFailure>().having(
+            (e) => e.key,
+            'message',
+            contains('If your email was confirmed, sign in'),
+          ),
+        ),
+      );
+      expect(requests, 0);
+    },
+  );
+  test('Missing recovery verifier asks for a new recovery link', () async {
+    await expectLater(
+      repository.completeCallback(
+        Uri.parse('dev.bakequote.mobile://auth/reset?code=valid'),
+        CallbackFlow.reset,
+      ),
+      throwsA(
+        isA<UserFacingFailure>().having(
+          (e) => e.key,
+          'message',
+          contains('Request a new recovery email'),
+        ),
+      ),
+    );
+    expect(requests, 0);
+  });
+  test(
     'Invalid server session clears the SDK session during restoration',
     () async {
       await repository.register('alice@example.test', 'password', 'Alice');

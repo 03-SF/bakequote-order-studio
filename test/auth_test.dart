@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bakequote_mobile/core/config/backend_config.dart';
 import 'package:bakequote_mobile/features/auth/application/auth_controller.dart';
 import 'package:bakequote_mobile/core/media/image_validation.dart';
@@ -8,6 +9,24 @@ import 'package:bakequote_mobile/features/auth/domain/auth_models.dart';
 import 'support/fake_auth_repository.dart';
 
 void main() {
+  test(
+    'Authentication, database and network errors have distinct safe guidance',
+    () {
+      expect(
+        authErrorKey(const AuthException('private', code: 'bad_code_verifier')),
+        contains('invalid or expired'),
+      );
+      expect(
+        authErrorKey(const AuthException('private', code: 'unexpected')),
+        contains('Authentication'),
+      );
+      expect(
+        authErrorKey(const PostgrestException(message: 'private SQL')),
+        contains('account data'),
+      );
+      expect(authErrorKey(TimeoutException('private')), contains('connection'));
+    },
+  );
   test('Shared image failures map to safe authentication copy', () {
     expect(
       authErrorKey(

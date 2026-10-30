@@ -44,6 +44,12 @@ final authControllerProvider = NotifierProvider<AuthController, AuthViewState>(
 String authErrorKey(Object error) {
   if (error is UserFacingFailure) return error.key;
   if (error is ImageValidationFailure) return error.message;
+  if (error is TimeoutException || error is AuthRetryableFetchException) {
+    return 'The server could not be reached. Check your connection and try again.';
+  }
+  if (error is PostgrestException) {
+    return 'Your account data could not be loaded. Try again or contact support.';
+  }
   if (error is AuthException) {
     switch (error.code) {
       case 'invalid_credentials':
@@ -58,11 +64,41 @@ String authErrorKey(Object error) {
       case 'otp_expired':
       case 'flow_state_expired':
       case 'flow_state_not_found':
+      case 'bad_code_verifier':
         return 'This link is invalid or expired. Request a new email.';
     }
+    return 'Authentication could not be completed. Sign in or request a new link.';
   }
   // Do not display raw backend messages, SQL details, URLs or credentials.
-  return 'Could not complete this action. Check your connection and try again.';
+  return 'Could not complete this action. Please try again.';
+}
+
+// Report only bounded classifications, never raw error text or callback URLs.
+void _logAuthFailure(String operation, Object error) {
+  String category = 'unexpected';
+  String status = 'none';
+  String code = 'none';
+  if (error is AuthException) {
+    category = error is AuthRetryableFetchException ? 'network' : 'auth';
+    status = RegExp(r'^\d{3}$').hasMatch(error.statusCode ?? '')
+        ? error.statusCode!
+        : 'none';
+    code = RegExp(r'^[a-z0-9_]{1,64}$').hasMatch(error.code ?? '')
+        ? error.code!
+        : 'none';
+  } else if (error is PostgrestException) {
+    category = 'database';
+    code = RegExp(r'^[A-Za-z0-9]{1,12}$').hasMatch(error.code ?? '')
+        ? error.code!
+        : 'none';
+  } else if (error is TimeoutException) {
+    category = 'timeout';
+  } else if (error is UserFacingFailure) {
+    category = 'handled';
+  }
+  debugPrint(
+    'Auth diagnostic: operation=$operation category=$category status=$status code=$code',
+  );
 }
 
 class AuthController extends Notifier<AuthViewState> {
@@ -240,6 +276,7 @@ class AuthController extends Notifier<AuthViewState> {
         profile: profile,
       );
     } catch (error) {
+      _logAuthFailure('profile_or_recovery_state', error);
       if (!_disposed && request == _epoch) _failure(error);
     }
   }
@@ -269,6 +306,7 @@ class AuthController extends Notifier<AuthViewState> {
       _recoveryUserId = flow == CallbackFlow.reset ? identity.id : null;
       await _accept(identity);
     } catch (error) {
+      _logAuthFailure('callback_exchange', error);
       // An invalid callback never falls through to an old authenticated screen.
       try {
         await _repository!.logout();

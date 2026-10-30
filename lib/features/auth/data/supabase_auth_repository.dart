@@ -85,9 +85,25 @@ class SupabaseAuthRepository implements AuthRepository {
         'This link is invalid or expired. Request a new email.',
       );
     }
-    final response = await client.auth.exchangeCodeForSession(
-      uri.queryParameters['code']!,
-    );
+    final AuthSessionUrlResponse response;
+    try {
+      response = await client.auth.exchangeCodeForSession(
+        uri.queryParameters['code']!,
+      );
+    } on AuthException catch (error) {
+      // gotrue 2.27.3 throws this local error before any token request.
+      if (error.statusCode == null &&
+          error.code == null &&
+          error.message ==
+              'Code verifier could not be found in local storage.') {
+        throw UserFacingFailure(
+          flow == CallbackFlow.verify
+              ? 'This link was opened in a different browser or its sign-in state is missing. If your email was confirmed, sign in; otherwise request a new verification email in this browser.'
+              : 'This recovery link was opened in a different browser or its sign-in state is missing. Request a new recovery email in this browser.',
+        );
+      }
+      rethrow;
+    }
     final recovery =
         response.redirectType == AuthChangeEvent.passwordRecovery.name;
     if (recovery != (flow == CallbackFlow.reset)) {
@@ -126,7 +142,16 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AccountProfile> profile(String userId) async {
-    final p = await client.from('profiles').select().eq('id', userId).single();
+    final p = await client
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .maybeSingle();
+    if (p == null) {
+      throw const UserFacingFailure(
+        'Your account profile could not be found. Contact support to restore it.',
+      );
+    }
     Map<String, dynamic>? b;
     if (p['initial_experience'] == 'baker') {
       b = await client

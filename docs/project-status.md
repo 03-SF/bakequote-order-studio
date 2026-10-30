@@ -1,5 +1,9 @@
 # Current project status - Phase 5 progression in local implementation
 
+## Verification callback investigation (2026-10-30)
+
+Missing PKCE verifier errors now explain browser-state recovery, and profile/database, Auth and network errors have distinct sanitized feedback. The user-reported live failure has not been reproduced, so its precise root cause and confirmation status remain unknown. Focused auth suite: 26 passed; full Flutter suite: 74 passed; formatting and analysis passed; live-configured Web release and Android debug builds passed. No email was resent, no live callback acceptance or native installation was performed. The existing listener on port 7357 predates this Web build; restart it before using the updated code. See [integration verification](integration-verification.md) for the specific evidence and blockers.
+
 ## Current all-phase audit continuation
 
 The live onboarding form previously preselected Customer; it now requires an explicit Customer/Baker choice and shows a validation message until selected. Existing identity records and the unresolved dual-role policy are unchanged. Focused authentication widgets: 4 passed; full Flutter suite: 71 passed; formatting and Flutter analysis passed; Android debug APK compiled without installation. These are local checks, not live first-time onboarding acceptance. The phase matrix now includes phases 1–4 and 3A as well as later-phase gaps. Conversation attachment uploads and account deletion remain incomplete; real Customer/Baker A/B acceptance is blocked by missing registered baker accounts and recent Auth rate limiting. Native acceptance remains deferred. No release approval is claimed.
