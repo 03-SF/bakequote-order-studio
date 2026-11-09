@@ -1,0 +1,60 @@
+import type { Lang } from "./types";
+import { useBQ } from "./store";
+
+const ur: Record<string, string> = {
+  Home: "ہوم",
+  Orders: "آرڈرز",
+  Messages: "پیغامات",
+  Account: "اکاؤنٹ",
+  Today: "آج",
+  Calendar: "کیلنڈر",
+  Customer: "کسٹمر",
+  Baker: "بیکر",
+  "Demo controls": "ڈیمو کنٹرولز",
+  "Switch role": "کردار تبدیل کریں",
+  "Reset demo data": "ڈیمو ڈیٹا ری سیٹ کریں",
+  Language: "زبان",
+  "Create request": "درخواست بنائیں",
+  "Find your baker": "اپنا بیکر تلاش کریں",
+  "Saved bakers": "محفوظ بیکرز",
+  "Active order": "جاری آرڈر",
+  Pending: "زیر التواء",
+  Confirmed: "تصدیق شدہ",
+  Baking: "تیار ہو رہا ہے",
+  Ready: "تیار",
+  Delivered: "پہنچا دیا",
+  Declined: "مسترد",
+  Withdrawn: "واپس لیا",
+  Cancelled: "منسوخ",
+  Overdue: "تاخیر",
+  Upcoming: "آنے والے",
+  Quote: "قیمت",
+  Total: "کل",
+  Advance: "پیشگی",
+  Balance: "بقایا",
+  Settings: "ترتیبات",
+  "Sign out": "سائن آؤٹ",
+  Search: "تلاش",
+  Send: "بھیجیں",
+  Back: "واپس",
+  Next: "آگے",
+  Submit: "جمع کریں",
+  Save: "محفوظ کریں",
+  Menu: "مینو",
+  Reviews: "تبصرے",
+  "Quick manual order": "فوری دستی آرڈر",
+  Active: "جاری",
+  Past: "گزشتہ",
+  All: "سب",
+  Help: "مدد",
+  Privacy: "رازداری",
+  Notifications: "اطلاعات",
+  "Order details": "آرڈر کی تفصیل",
+  "Welcome to BakeQuote": "بیک کوٹ میں خوش آمدید",
+};
+
+export const translate = (lang: Lang, key: string) => (lang === "ur" ? (ur[key] ?? key) : key);
+export function useT() {
+  const lang = useBQ((s) => s.lang);
+  return (key: string) => translate(lang, key);
+}
